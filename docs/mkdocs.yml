@@ -1,6 +1,6 @@
 site_name: CIAB — Claude In A Box
 site_description: Manage coding agent sandboxes with a single API
-site_url: https://shakedzy.github.io/ciab
+site_url: https://shakedaskayo.github.io/ciab
 repo_url: https://github.com/shakedaskayo/ciab
 repo_name: shakedaskayo/ciab
 edit_uri: edit/main/docs/docs/
@@ -137,6 +137,7 @@ nav:
     - Custom Provider: agent-providers/custom-provider.md
   - Deployment:
     - Overview: deployment/index.md
+    - Mobile Access: deployment/mobile-access.md
     - Docker: deployment/docker.md
     - OpenSandbox: deployment/opensandbox.md
     - Production: deployment/production.md

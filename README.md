@@ -25,13 +25,52 @@ curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh |
 
 <br>
 
+## Live Streaming Chat
+
+Chat with coding agents in real time — watch text stream in, tool calls execute, and results appear as they happen. Full SSE streaming from agent to browser.
+
+<p align="center">
+  <img src="docs/docs/assets/screenshots/ciab-live-chat-streaming.gif" alt="CIAB Live Streaming Chat" width="100%">
+</p>
+
+<br>
+
+## Desktop App
+
+Visual management for all your sandboxes, workspaces, skills, credentials, and gateway tunnels.
+
+<p align="center">
+  <img src="docs/docs/assets/screenshots/ciab-app-tour.gif" alt="CIAB Desktop App Tour" width="100%">
+</p>
+
+<br>
+
+## Mobile Access — Chat From Anywhere
+
+CIAB's built-in gateway lets you access your sandboxes from **any device** — iPhone, iPad, Android, or any browser. Scan the QR code from the Gateway page to open the web UI on your phone. Full streaming chat works on mobile with the same real-time experience.
+
+<p align="center">
+  <img src="docs/docs/assets/screenshots/ciab-gateway-qr-mobile.gif" alt="CIAB Gateway QR Code for Mobile Access" width="100%">
+</p>
+
+**How it works:**
+
+1. Start the CIAB server on your machine
+2. Open the **Gateway** page in the desktop app
+3. Scan the **QR code** with your phone (same WiFi network)
+4. Chat with your agents from your phone with full streaming support
+
+For remote access outside your network, enable a tunnel (bore, Cloudflare, ngrok, or frp) to get a public URL — accessible from anywhere in the world.
+
+<br>
+
 ## How It Works
 
 <p align="center">
   <img src="docs/docs/assets/architecture.svg" alt="CIAB Architecture" width="100%">
 </p>
 
-**Clients** (CLI, REST API, desktop app, Slack/WhatsApp) connect to the **CIAB control plane** — an Axum-based gateway that handles auth, streaming, and orchestration. The control plane provisions sandboxes through a **9-step pipeline** (validate → prepare → create → start → mount → inject credentials → clone repos → run scripts → launch agent), streaming every step over **SSE** in real time. Each sandbox runs an isolated coding agent backed by its provider's API.
+**Clients** (CLI, REST API, desktop app, mobile, Slack/WhatsApp) connect to the **CIAB control plane** — an Axum-based gateway that handles auth, streaming, and orchestration. The control plane provisions sandboxes through a **9-step pipeline** (validate → prepare → create → start → mount → inject credentials → clone repos → run scripts → launch agent), streaming every step over **SSE** in real time. Each sandbox runs an isolated coding agent backed by its provider's API.
 
 <br>
 
@@ -62,11 +101,12 @@ ciab agent chat <sandbox-id> --message "Refactor the auth module" --stream
 | **Multi-agent** | Run Claude Code, Codex, Gemini CLI, and Cursor side-by-side. Switch providers with one config change. |
 | **Isolated sandboxes** | Each agent gets its own workspace, env vars, credentials, and mounted repos. Local processes or containers. |
 | **Real-time streaming** | Watch agent output as it happens — text deltas, tool use, provisioning steps, logs — all over SSE. |
+| **Mobile access** | Scan a QR code to chat with agents from your iPhone, iPad, or any device. Full streaming on mobile. |
 | **Workspaces** | Reusable, TOML-configurable environment definitions. Bundle repos, skills, pre-commands, binaries, and agent config. |
 | **Encrypted credentials** | AES-256-GCM vault with OAuth2 support. Credentials injected at provisioning time, never stored in plaintext. |
 | **Remote access** | Expose sandboxes via bore, Cloudflare Tunnel, ngrok, or frp. Token-scoped auth with LAN discovery. |
 | **Channels** | Pipe agent conversations through Slack, WhatsApp, or webhooks. Per-sender session tracking. |
-| **Desktop app** | Tauri + React visual management — create sandboxes, watch streams, manage workspaces. |
+| **Desktop + Web app** | Tauri + React visual management — create sandboxes, watch streams, manage workspaces. Accessible via browser on any device. |
 
 <br>
 
@@ -78,15 +118,17 @@ ciab sandbox create --provider claude-code
 ciab agent chat <id> --message "Fix the bug" --stream
 
 # REST API
-curl -X POST http://localhost:9090/api/sandboxes \
+curl -X POST http://localhost:9090/api/v1/sandboxes \
   -H "Content-Type: application/json" \
-  -d '{"provider": "claude-code", "env": {"ANTHROPIC_API_KEY": "..."}}'
+  -d '{"agent_provider": "claude-code", "env_vars": {"ANTHROPIC_API_KEY": "..."}}'
 
 # SSE streaming
-curl -N http://localhost:9090/api/sandboxes/<id>/events
+curl -N http://localhost:9090/api/v1/sandboxes/<id>/stream
 
 # Desktop app
 make desktop
+
+# Mobile — scan QR from Gateway page or open http://<your-ip>:9090
 ```
 
 <br>
