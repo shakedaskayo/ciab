@@ -11,6 +11,7 @@ use ciab_core::types::agent::{
     AgentCommand, AgentConfig, AgentHealth, PromptMode, SlashCommand, SlashCommandArg,
     SlashCommandCategory,
 };
+use ciab_core::types::llm_provider::{AgentLlmCompatibility, LlmProviderKind};
 use ciab_core::types::session::Message;
 use ciab_core::types::stream::{StreamEvent, StreamEventType};
 
@@ -55,10 +56,20 @@ impl AgentProvider for CodexProvider {
             }
         }
 
+        let mut env: std::collections::HashMap<String, String> = Default::default();
+
+        // LLM provider override
+        if let Some(base_url) = config.extra.get("llm_base_url").and_then(|v| v.as_str()) {
+            env.insert("OPENAI_BASE_URL".to_string(), base_url.to_string());
+        }
+        if let Some(api_key) = config.extra.get("llm_api_key").and_then(|v| v.as_str()) {
+            env.insert("OPENAI_API_KEY".to_string(), api_key.to_string());
+        }
+
         AgentCommand {
             command: "codex".to_string(),
             args,
-            env: Default::default(),
+            env,
             workdir: None,
         }
     }
@@ -312,6 +323,32 @@ impl AgentProvider for CodexProvider {
                     required: false,
                 }],
                 provider_native: true,
+            },
+        ]
+    }
+
+    fn supported_llm_providers(&self) -> Vec<AgentLlmCompatibility> {
+        vec![
+            AgentLlmCompatibility {
+                agent_provider: "codex".to_string(),
+                llm_provider_kind: LlmProviderKind::OpenAi,
+                env_var_mapping: [("OPENAI_API_KEY".to_string(), "{api_key}".to_string())]
+                    .into_iter()
+                    .collect(),
+                supports_model_override: true,
+                notes: Some("Native provider".to_string()),
+            },
+            AgentLlmCompatibility {
+                agent_provider: "codex".to_string(),
+                llm_provider_kind: LlmProviderKind::OpenRouter,
+                env_var_mapping: [
+                    ("OPENAI_BASE_URL".to_string(), "https://openrouter.ai/api/v1".to_string()),
+                    ("OPENAI_API_KEY".to_string(), "{api_key}".to_string()),
+                ]
+                .into_iter()
+                .collect(),
+                supports_model_override: true,
+                notes: Some("Via OPENAI_BASE_URL override".to_string()),
             },
         ]
     }

@@ -1,6 +1,7 @@
 mod channel_repo;
 mod credential_repo;
 mod gateway_repo;
+mod llm_provider_repo;
 mod message_repo;
 mod migrations;
 mod sandbox_repo;

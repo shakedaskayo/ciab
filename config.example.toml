@@ -161,6 +161,38 @@ format = "json"
 # [gateway.advanced.k8s_ingress_annotations]
 # "nginx.ingress.kubernetes.io/proxy-body-size" = "50m"
 
+# --- LLM Providers ---
+# LLM providers are inference backends (Anthropic API, OpenAI API, Ollama, etc.).
+# They are distinct from agent providers (claude-code, codex, etc.) which are CLI runtimes.
+# Providers configured here are seeded into the database on first startup.
+
+[llm_providers]
+auto_detect_ollama = true   # Auto-detect local Ollama on startup
+
+# Example: seed an Anthropic provider from environment
+# [llm_providers.providers.anthropic]
+# kind = "anthropic"
+# api_key_env = "ANTHROPIC_API_KEY"
+# default_model = "claude-sonnet-4-20250514"
+
+# Example: seed an OpenAI provider
+# [llm_providers.providers.openai]
+# kind = "openai"
+# api_key_env = "OPENAI_API_KEY"
+# default_model = "gpt-4o"
+
+# Example: OpenRouter (use with any agent via base URL override)
+# [llm_providers.providers.openrouter]
+# kind = "openrouter"
+# api_key_env = "OPENROUTER_API_KEY"
+# base_url = "https://openrouter.ai/api/v1"
+
+# Example: Local Ollama with explicit base URL
+# [llm_providers.providers.ollama-local]
+# kind = "ollama"
+# base_url = "http://localhost:11434"
+# default_model = "llama3:8b"
+
 # --- OAuth ---
 
 # [oauth.providers.github]

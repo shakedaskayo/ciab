@@ -245,6 +245,42 @@ pub fn build_router(state: AppState) -> axum::Router {
             "/gateway/providers/prepare",
             post(routes::gateway::prepare_provider),
         )
+        // LLM Providers
+        .route(
+            "/llm-providers",
+            post(routes::llm_providers::create_llm_provider)
+                .get(routes::llm_providers::list_llm_providers),
+        )
+        .route(
+            "/llm-providers/detect",
+            get(routes::llm_providers::detect_providers),
+        )
+        .route(
+            "/llm-providers/compatibility",
+            get(routes::llm_providers::compatibility),
+        )
+        .route(
+            "/llm-providers/ollama/pull",
+            post(routes::llm_providers::ollama_pull),
+        )
+        .route(
+            "/llm-providers/{id}",
+            get(routes::llm_providers::get_llm_provider)
+                .put(routes::llm_providers::update_llm_provider)
+                .delete(routes::llm_providers::delete_llm_provider),
+        )
+        .route(
+            "/llm-providers/{id}/models",
+            get(routes::llm_providers::list_models),
+        )
+        .route(
+            "/llm-providers/{id}/models/refresh",
+            post(routes::llm_providers::refresh_models),
+        )
+        .route(
+            "/llm-providers/{id}/test",
+            post(routes::llm_providers::test_provider),
+        )
         // Channels
         .route(
             "/channels",

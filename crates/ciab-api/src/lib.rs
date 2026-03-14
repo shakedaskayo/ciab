@@ -1,4 +1,5 @@
 pub mod middleware;
+pub mod ollama;
 pub mod permission_gate;
 pub mod reconciler;
 pub mod router;

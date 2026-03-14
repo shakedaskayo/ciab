@@ -343,6 +343,7 @@ fn test_config() -> AppConfig {
         oauth: None,
         gateway: Default::default(),
         channels: Default::default(),
+        llm_providers: Default::default(),
     }
 }
 

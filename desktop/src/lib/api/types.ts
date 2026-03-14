@@ -843,6 +843,80 @@ export interface UpdateChannelRequest {
   labels?: Record<string, string>;
 }
 
+// --- LLM Providers ---
+
+export type LlmProviderKind = "anthropic" | "openai" | "google" | "ollama" | "openrouter" | "custom";
+
+export interface LlmProvider {
+  id: string;
+  name: string;
+  kind: LlmProviderKind;
+  enabled: boolean;
+  base_url: string | null;
+  api_key_credential_id: string | null;
+  default_model: string | null;
+  is_local: boolean;
+  auto_detected: boolean;
+  extra: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LlmModel {
+  id: string;
+  name: string;
+  provider_id: string;
+  context_window: number | null;
+  supports_tools: boolean;
+  supports_vision: boolean;
+  is_local: boolean;
+  size_bytes: number | null;
+  family: string | null;
+}
+
+export interface AgentLlmCompatibility {
+  agent_provider: string;
+  llm_provider_kind: LlmProviderKind;
+  supports_model_override: boolean;
+  notes: string | null;
+}
+
+export interface CreateLlmProviderRequest {
+  name: string;
+  kind: LlmProviderKind;
+  enabled?: boolean;
+  base_url?: string;
+  api_key?: string;
+  default_model?: string;
+  is_local?: boolean;
+  extra?: Record<string, unknown>;
+}
+
+export interface UpdateLlmProviderRequest {
+  name?: string;
+  kind?: LlmProviderKind;
+  enabled?: boolean;
+  base_url?: string | null;
+  api_key?: string;
+  default_model?: string | null;
+  is_local?: boolean;
+  extra?: Record<string, unknown>;
+}
+
+export interface LlmProviderTestResult {
+  success: boolean;
+  message: string;
+  latency_ms: number | null;
+}
+
+export interface DetectedLlmProvider {
+  kind: LlmProviderKind;
+  name: string;
+  base_url: string;
+  version: string | null;
+  already_registered: boolean;
+}
+
 // --- API Error ---
 
 export interface ApiError {

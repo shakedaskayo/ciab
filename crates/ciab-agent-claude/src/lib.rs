@@ -11,6 +11,7 @@ use ciab_core::types::agent::{
     AgentCommand, AgentConfig, AgentHealth, InteractiveProtocol, PromptMode, SlashCommand,
     SlashCommandArg, SlashCommandCategory,
 };
+use ciab_core::types::llm_provider::{AgentLlmCompatibility, LlmProviderKind};
 use ciab_core::types::session::Message;
 use ciab_core::types::stream::{StreamEvent, StreamEventType};
 
@@ -215,6 +216,14 @@ impl AgentProvider for ClaudeCodeProvider {
                 "CIAB_HOOKS_SETTINGS".to_string(),
                 hooks_settings.to_string(),
             );
+        }
+
+        // LLM provider override — inject base URL and API key from extra config.
+        if let Some(base_url) = config.extra.get("llm_base_url").and_then(|v| v.as_str()) {
+            env.insert("ANTHROPIC_BASE_URL".to_string(), base_url.to_string());
+        }
+        if let Some(api_key) = config.extra.get("llm_api_key").and_then(|v| v.as_str()) {
+            env.insert("ANTHROPIC_API_KEY".to_string(), api_key.to_string());
         }
 
         AgentCommand {
@@ -918,6 +927,32 @@ impl AgentProvider for ClaudeCodeProvider {
                 category: SlashCommandCategory::Navigation,
                 args: vec![],
                 provider_native: true,
+            },
+        ]
+    }
+
+    fn supported_llm_providers(&self) -> Vec<AgentLlmCompatibility> {
+        vec![
+            AgentLlmCompatibility {
+                agent_provider: "claude-code".to_string(),
+                llm_provider_kind: LlmProviderKind::Anthropic,
+                env_var_mapping: [("ANTHROPIC_API_KEY".to_string(), "{api_key}".to_string())]
+                    .into_iter()
+                    .collect(),
+                supports_model_override: true,
+                notes: Some("Native provider".to_string()),
+            },
+            AgentLlmCompatibility {
+                agent_provider: "claude-code".to_string(),
+                llm_provider_kind: LlmProviderKind::OpenRouter,
+                env_var_mapping: [
+                    ("ANTHROPIC_BASE_URL".to_string(), "https://openrouter.ai/api/v1".to_string()),
+                    ("ANTHROPIC_API_KEY".to_string(), "{api_key}".to_string()),
+                ]
+                .into_iter()
+                .collect(),
+                supports_model_override: true,
+                notes: Some("Via ANTHROPIC_BASE_URL override".to_string()),
             },
         ]
     }

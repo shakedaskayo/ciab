@@ -1,5 +1,12 @@
 import { get, post, put, del, putRaw, getRaw } from "./client";
 import type {
+  LlmProvider,
+  LlmModel,
+  AgentLlmCompatibility,
+  CreateLlmProviderRequest,
+  UpdateLlmProviderRequest,
+  LlmProviderTestResult,
+  DetectedLlmProvider,
   SandboxInfo,
   SandboxSpec,
   Session,
@@ -380,6 +387,42 @@ export const channels = {
       `/api/v1/channels/${id}/messages${qs ? `?${qs}` : ""}`
     );
   },
+};
+
+// --- LLM Providers ---
+
+export const llmProviders = {
+  list: () => get<LlmProvider[]>("/api/v1/llm-providers"),
+
+  create: (request: CreateLlmProviderRequest) =>
+    post<LlmProvider>("/api/v1/llm-providers", request),
+
+  get: (id: string) => get<LlmProvider>(`/api/v1/llm-providers/${id}`),
+
+  update: (id: string, request: UpdateLlmProviderRequest) =>
+    put<LlmProvider>(`/api/v1/llm-providers/${id}`, request),
+
+  delete: (id: string) => del<void>(`/api/v1/llm-providers/${id}`),
+
+  models: (id: string) => get<LlmModel[]>(`/api/v1/llm-providers/${id}/models`),
+
+  refreshModels: (id: string) =>
+    post<LlmModel[]>(`/api/v1/llm-providers/${id}/models/refresh`),
+
+  test: (id: string) =>
+    post<LlmProviderTestResult>(`/api/v1/llm-providers/${id}/test`),
+
+  detect: () =>
+    get<{ detected: DetectedLlmProvider[] }>("/api/v1/llm-providers/detect"),
+
+  ollamaPull: (model: string, base_url?: string) =>
+    post<{ model: string; status: string }>("/api/v1/llm-providers/ollama/pull", {
+      model,
+      base_url,
+    }),
+
+  compatibility: () =>
+    get<AgentLlmCompatibility[]>("/api/v1/llm-providers/compatibility"),
 };
 
 // --- Agents ---

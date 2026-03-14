@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import { useCreateWorkspace } from "@/lib/hooks/use-workspaces";
 import { useTemplates } from "@/lib/hooks/use-templates";
+import { useLlmProviders, useLlmProviderModels, useCompatibility } from "@/lib/hooks/use-llm-providers";
 import AgentProviderIcon from "@/components/shared/AgentProviderIcon";
+import ModelPicker from "@/features/settings/ModelPicker";
 import type {
   Workspace,
   WorkspaceRepo,
@@ -40,6 +42,8 @@ interface Props {
 export default function CreateWorkspaceDialog({ onClose }: Props) {
   const createWorkspace = useCreateWorkspace();
   const { data: templates, isLoading: templatesLoading } = useTemplates();
+  const { data: llmProviders } = useLlmProviders();
+  const { data: compatibility } = useCompatibility();
   const [step, setStep] = useState<"template" | "configure">("template");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -50,6 +54,8 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
   const [envVars, setEnvVars] = useState<Array<{ key: string; value: string }>>([]);
   const [systemPrompt, setSystemPrompt] = useState("");
   const [runtimeBackend, setRuntimeBackend] = useState<RuntimeBackend>("default");
+  const [selectedModel, setSelectedModel] = useState("");
+  const [selectedLlmProviderId, setSelectedLlmProviderId] = useState("");
 
   // Collapsible sections
   const [showRepos, setShowRepos] = useState(false);
@@ -87,10 +93,15 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
       if (key.trim()) envMap[key.trim()] = value;
     });
 
+    const agentExtra: Record<string, unknown> = {};
+    if (selectedLlmProviderId) agentExtra.llm_provider_id = selectedLlmProviderId;
+
     const spec: WorkspaceSpec = {
       agent: {
         provider,
+        ...(selectedModel ? { model: selectedModel } : {}),
         ...(systemPrompt.trim() ? { system_prompt: systemPrompt.trim() } : {}),
+        ...(Object.keys(agentExtra).length > 0 ? { extra: agentExtra } : {}),
       },
       ...(repos.length > 0 ? { repositories: repos.filter((r) => r.url.trim()) } : {}),
       ...(preCommands.length > 0 ? { pre_commands: preCommands.filter((c) => c.command.trim()) } : {}),
@@ -513,6 +524,26 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
               open={showAgent}
               onToggle={() => setShowAgent(!showAgent)}
             >
+              {/* Model Picker */}
+              {llmProviders && llmProviders.length > 0 && (
+                <div>
+                  <label className="label">
+                    Model Override{" "}
+                    <span className="text-ciab-text-muted/50 normal-case tracking-normal">(optional)</span>
+                  </label>
+                  <WorkspaceModelPicker
+                    provider={provider}
+                    llmProviders={llmProviders}
+                    compatibility={compatibility ?? []}
+                    value={selectedLlmProviderId && selectedModel ? `${selectedLlmProviderId}:${selectedModel}` : ""}
+                    onChange={(modelId, providerId) => {
+                      setSelectedModel(modelId);
+                      setSelectedLlmProviderId(providerId);
+                    }}
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="label">System Prompt</label>
                 <textarea
@@ -560,6 +591,46 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+function WorkspaceModelPicker({
+  provider,
+  llmProviders,
+  compatibility,
+  value,
+  onChange,
+}: {
+  provider: string;
+  llmProviders: { id: string; name: string; kind: string; enabled: boolean }[];
+  compatibility: { agent_provider: string; llm_provider_kind: string; supports_model_override: boolean }[];
+  value: string;
+  onChange: (modelId: string, providerId: string) => void;
+}) {
+  const compatibleKinds = new Set(
+    compatibility
+      .filter((c) => c.agent_provider === provider && c.supports_model_override)
+      .map((c) => c.llm_provider_kind)
+  );
+
+  const filteredProviders = llmProviders.filter((p) => compatibleKinds.has(p.kind));
+
+  if (filteredProviders.length === 0) return null;
+
+  const modelsMap: Record<string, any[]> = {};
+  for (const p of filteredProviders) {
+    const { data } = useLlmProviderModels(p.id);
+    if (data) modelsMap[p.id] = data;
+  }
+
+  return (
+    <ModelPicker
+      providers={filteredProviders as any}
+      models={modelsMap}
+      value={value}
+      onChange={onChange}
+      className="w-full"
+    />
   );
 }
 

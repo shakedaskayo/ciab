@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 import type { SandboxSpec } from "@/lib/api/types";
 import AgentProviderIcon from "@/components/shared/AgentProviderIcon";
+import { useLlmProviders, useLlmProviderModels, useCompatibility } from "@/lib/hooks/use-llm-providers";
+import ModelPicker from "@/features/settings/ModelPicker";
 
 const PROVIDERS = [
   { value: "claude-code", label: "Claude Code", org: "Anthropic" },
@@ -21,6 +23,35 @@ export default function CreateSandboxDialog({ onClose, onCreate }: Props) {
   const [envVars, setEnvVars] = useState<Array<{ key: string; value: string }>>(
     [{ key: "", value: "" }]
   );
+  const [selectedModel, setSelectedModel] = useState("");
+  const [selectedProviderId, setSelectedProviderId] = useState("");
+
+  const { data: llmProviders } = useLlmProviders();
+  const { data: compatibility } = useCompatibility();
+
+  // Check if selected agent supports model override
+  const supportsModelOverride = useMemo(() => {
+    if (!compatibility) return false;
+    return compatibility.some(
+      (c) => c.agent_provider === provider && c.supports_model_override
+    );
+  }, [compatibility, provider]);
+
+  // Get compatible LLM provider kinds for the selected agent
+  const compatibleKinds = useMemo(() => {
+    if (!compatibility) return new Set<string>();
+    return new Set(
+      compatibility
+        .filter((c) => c.agent_provider === provider)
+        .map((c) => c.llm_provider_kind)
+    );
+  }, [compatibility, provider]);
+
+  // Filter LLM providers to only compatible ones
+  const compatibleProviders = useMemo(() => {
+    if (!llmProviders) return [];
+    return llmProviders.filter((p) => compatibleKinds.has(p.kind));
+  }, [llmProviders, compatibleKinds]);
 
   const handleCreate = () => {
     const envMap: Record<string, string> = {};
@@ -28,10 +59,20 @@ export default function CreateSandboxDialog({ onClose, onCreate }: Props) {
       if (key.trim()) envMap[key.trim()] = value;
     });
 
+    const extra: Record<string, unknown> = {};
+    if (selectedProviderId) {
+      extra.llm_provider_id = selectedProviderId;
+    }
+
     onCreate({
       agent_provider: provider,
       name: name.trim() || undefined,
       env_vars: Object.keys(envMap).length > 0 ? envMap : undefined,
+      agent_config: {
+        provider,
+        ...(selectedModel ? { model: selectedModel } : {}),
+        ...(Object.keys(extra).length > 0 ? { extra } : {}),
+      },
     });
   };
 
@@ -60,7 +101,11 @@ export default function CreateSandboxDialog({ onClose, onCreate }: Props) {
               {PROVIDERS.map((p) => (
                 <button
                   key={p.value}
-                  onClick={() => setProvider(p.value)}
+                  onClick={() => {
+                    setProvider(p.value);
+                    setSelectedModel("");
+                    setSelectedProviderId("");
+                  }}
                   className={`flex items-center gap-2.5 p-2.5 rounded-md border transition-all text-left ${
                     provider === p.value
                       ? "border-ciab-copper/50 bg-ciab-copper/5"
@@ -90,6 +135,24 @@ export default function CreateSandboxDialog({ onClose, onCreate }: Props) {
               className="input w-full"
             />
           </div>
+
+          {/* Model override */}
+          {supportsModelOverride && compatibleProviders.length > 0 && (
+            <div>
+              <label className="label">
+                Model Override{" "}
+                <span className="text-ciab-text-muted/50 normal-case tracking-normal">(optional)</span>
+              </label>
+              <ModelPickerWrapper
+                providers={compatibleProviders}
+                value={selectedProviderId && selectedModel ? `${selectedProviderId}:${selectedModel}` : ""}
+                onChange={(modelId, providerId) => {
+                  setSelectedModel(modelId);
+                  setSelectedProviderId(providerId);
+                }}
+              />
+            </div>
+          )}
 
           {/* Environment variables */}
           <div>
@@ -153,5 +216,32 @@ export default function CreateSandboxDialog({ onClose, onCreate }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+function ModelPickerWrapper({
+  providers,
+  value,
+  onChange,
+}: {
+  providers: { id: string; name: string; kind: string; enabled: boolean }[];
+  value: string;
+  onChange: (modelId: string, providerId: string) => void;
+}) {
+  // Fetch models for each provider
+  const modelsMap: Record<string, any[]> = {};
+  for (const p of providers) {
+    const { data } = useLlmProviderModels(p.id);
+    if (data) modelsMap[p.id] = data;
+  }
+
+  return (
+    <ModelPicker
+      providers={providers as any}
+      models={modelsMap}
+      value={value}
+      onChange={onChange}
+      className="w-full"
+    />
   );
 }

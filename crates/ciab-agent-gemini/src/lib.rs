@@ -11,6 +11,7 @@ use ciab_core::types::agent::{
     AgentCommand, AgentConfig, AgentHealth, PromptMode, SlashCommand, SlashCommandArg,
     SlashCommandCategory,
 };
+use ciab_core::types::llm_provider::{AgentLlmCompatibility, LlmProviderKind};
 use ciab_core::types::session::Message;
 use ciab_core::types::stream::{StreamEvent, StreamEventType};
 
@@ -443,5 +444,17 @@ impl AgentProvider for GeminiProvider {
                 provider_native: true,
             },
         ]
+    }
+
+    fn supported_llm_providers(&self) -> Vec<AgentLlmCompatibility> {
+        vec![AgentLlmCompatibility {
+            agent_provider: "gemini".to_string(),
+            llm_provider_kind: LlmProviderKind::Google,
+            env_var_mapping: [("GOOGLE_API_KEY".to_string(), "{api_key}".to_string())]
+                .into_iter()
+                .collect(),
+            supports_model_override: true,
+            notes: Some("Native provider".to_string()),
+        }]
     }
 }

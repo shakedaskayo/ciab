@@ -11,6 +11,7 @@ use ciab_core::types::agent::{
     AgentCommand, AgentConfig, AgentHealth, PromptMode, SlashCommand, SlashCommandArg,
     SlashCommandCategory,
 };
+use ciab_core::types::llm_provider::{AgentLlmCompatibility, LlmProviderKind};
 use ciab_core::types::session::Message;
 use ciab_core::types::stream::{StreamEvent, StreamEventType};
 
@@ -455,5 +456,17 @@ impl AgentProvider for CursorProvider {
                 provider_native: true,
             },
         ]
+    }
+
+    fn supported_llm_providers(&self) -> Vec<AgentLlmCompatibility> {
+        vec![AgentLlmCompatibility {
+            agent_provider: "cursor".to_string(),
+            llm_provider_kind: LlmProviderKind::OpenAi,
+            env_var_mapping: [("CURSOR_API_KEY".to_string(), "{api_key}".to_string())]
+                .into_iter()
+                .collect(),
+            supports_model_override: true,
+            notes: Some("Uses OpenAI-compatible API".to_string()),
+        }]
     }
 }

@@ -107,6 +107,97 @@ pub async fn execute(command: ServerCommand) -> Result<()> {
             let cursor_provider = ciab_agent_cursor::CursorProvider;
             agents.insert("cursor".to_string(), Arc::new(cursor_provider));
 
+            // 7b. Seed LLM providers from config (on first run).
+            {
+                let existing_providers = db
+                    .list_llm_providers()
+                    .await
+                    .map_err(|e| anyhow::anyhow!("listing llm providers: {}", e))?;
+
+                if existing_providers.is_empty() {
+                    // Seed from config
+                    for (name, seed) in &app_config.llm_providers.providers {
+                        let kind: ciab_core::types::llm_provider::LlmProviderKind = seed
+                            .kind
+                            .parse()
+                            .map_err(|e: String| anyhow::anyhow!("{}", e))?;
+
+                        let is_local =
+                            kind == ciab_core::types::llm_provider::LlmProviderKind::Ollama;
+
+                        // If api_key_env is set, try to read from environment
+                        let mut api_key_credential_id = None;
+                        if let Some(ref env_var) = seed.api_key_env {
+                            if let Ok(key_value) = std::env::var(env_var) {
+                                let cred = credential_store
+                                    .store_credential(
+                                        &format!("llm-{}-key", name),
+                                        ciab_core::types::credentials::CredentialType::ApiKey,
+                                        key_value.as_bytes(),
+                                        std::collections::HashMap::new(),
+                                        None,
+                                    )
+                                    .await
+                                    .map_err(|e| anyhow::anyhow!("storing credential: {}", e))?;
+                                api_key_credential_id = Some(cred.id);
+                            }
+                        }
+
+                        let now = chrono::Utc::now();
+                        let provider = ciab_core::types::llm_provider::LlmProvider {
+                            id: uuid::Uuid::new_v4(),
+                            name: name.clone(),
+                            kind,
+                            enabled: true,
+                            base_url: seed.base_url.clone(),
+                            api_key_credential_id,
+                            default_model: seed.default_model.clone(),
+                            is_local,
+                            auto_detected: false,
+                            extra: std::collections::HashMap::new(),
+                            created_at: now,
+                            updated_at: now,
+                        };
+                        db.insert_llm_provider(&provider)
+                            .await
+                            .map_err(|e| anyhow::anyhow!("inserting llm provider: {}", e))?;
+                        tracing::info!(name = %name, kind = %provider.kind, "seeded LLM provider from config");
+                    }
+
+                    // Auto-detect Ollama
+                    if app_config.llm_providers.auto_detect_ollama {
+                        if let Some(client) = ciab_api::ollama::OllamaClient::detect().await {
+                            let version = client.version().await.ok();
+                            let now = chrono::Utc::now();
+                            let provider = ciab_core::types::llm_provider::LlmProvider {
+                                id: uuid::Uuid::new_v4(),
+                                name: "Ollama (local)".to_string(),
+                                kind: ciab_core::types::llm_provider::LlmProviderKind::Ollama,
+                                enabled: true,
+                                base_url: Some(client.base_url().to_string()),
+                                api_key_credential_id: None,
+                                default_model: None,
+                                is_local: true,
+                                auto_detected: true,
+                                extra: if let Some(v) = version {
+                                    [("version".to_string(), serde_json::Value::String(v))]
+                                        .into_iter()
+                                        .collect()
+                                } else {
+                                    std::collections::HashMap::new()
+                                },
+                                created_at: now,
+                                updated_at: now,
+                            };
+                            db.insert_llm_provider(&provider)
+                                .await
+                                .map_err(|e| anyhow::anyhow!("inserting ollama provider: {}", e))?;
+                            tracing::info!("auto-detected Ollama at {}", client.base_url());
+                        }
+                    }
+                }
+            }
+
             // 8. Initialize GatewayManager (if enabled).
             let gateway = if app_config.gateway.enabled {
                 let gw = ciab_gateway::GatewayManager::new(app_config.gateway.clone(), db.clone());

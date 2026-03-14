@@ -400,6 +400,13 @@ impl ProvisioningPipeline {
                     extra: HashMap::new(),
                 });
 
+        // Resolve LLM provider override if specified in agent config extra.
+        // If `llm_provider_id` is present, look up the provider and inject env vars.
+        // Note: full resolution requires DB access. In the provisioning pipeline,
+        // the caller (API layer) should resolve the LLM provider and inject
+        // `llm_base_url` and `llm_api_key` into agent_config.extra before
+        // calling provision(). This keeps the pipeline independent of ciab-db.
+
         let mut agent_cmd = agent.build_start_command(&agent_config);
 
         // Wrap with agentfs if enabled
