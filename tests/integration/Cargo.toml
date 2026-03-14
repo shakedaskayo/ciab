@@ -1,0 +1,33 @@
+[package]
+name = "ciab-integration-tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[test]]
+name = "integration"
+path = "main.rs"
+
+[dependencies]
+ciab-core = { workspace = true }
+ciab-db = { workspace = true }
+ciab-streaming = { workspace = true }
+ciab-sandbox = { workspace = true }
+ciab-credentials = { workspace = true }
+ciab-provisioning = { workspace = true }
+ciab-api = { workspace = true }
+ciab-agent-claude = { workspace = true }
+ciab-agent-codex = { workspace = true }
+ciab-agent-gemini = { workspace = true }
+ciab-agent-cursor = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+async-trait = { workspace = true }
+axum = { workspace = true }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { workspace = true }
+dashmap = { workspace = true }
+toml = { workspace = true }

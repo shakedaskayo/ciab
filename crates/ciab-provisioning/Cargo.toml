@@ -1,0 +1,17 @@
+[package]
+name = "ciab-provisioning"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ciab-core = { workspace = true }
+ciab-sandbox = { workspace = true }
+ciab-credentials = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+async-trait = { workspace = true }
+thiserror = { workspace = true }

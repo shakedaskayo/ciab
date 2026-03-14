@@ -1,0 +1,308 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 720" font-family="'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#09090B"/>
+      <stop offset="100%" stop-color="#111114"/>
+    </linearGradient>
+    <linearGradient id="copperGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D4845E"/>
+      <stop offset="100%" stop-color="#C4693D"/>
+    </linearGradient>
+    <linearGradient id="steelGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6FA0BE"/>
+      <stop offset="100%" stop-color="#5B8CA8"/>
+    </linearGradient>
+    <linearGradient id="sseGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#C4693D" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#E8A878" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#C4693D" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="provGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22C55E" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#22C55E" stop-opacity="0.05"/>
+    </linearGradient>
+
+    <!-- Glow filters -->
+    <filter id="copperGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
+    </filter>
+    <filter id="softGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+      <feFlood flood-color="#C4693D" flood-opacity="0.15"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Arrow marker -->
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#3F3F46" stroke="none"/>
+    </marker>
+    <marker id="arrowCopper" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#C4693D" stroke="none"/>
+    </marker>
+    <marker id="arrowSteel" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#5B8CA8" stroke="none"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="720" rx="12" fill="url(#bgGrad)"/>
+  <rect width="1100" height="720" rx="12" fill="none" stroke="#27272A" stroke-width="1"/>
+
+  <!-- Title -->
+  <text x="550" y="38" text-anchor="middle" fill="#EAEAED" font-size="15" font-weight="700" letter-spacing="0.5">CIAB Architecture</text>
+  <text x="550" y="56" text-anchor="middle" fill="#52525B" font-size="10.5" letter-spacing="0.3">Control plane, streaming, and sandbox orchestration</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- LEFT: Clients / Access Layer                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <!-- CLI -->
+  <rect x="30" y="170" width="130" height="50" rx="8" fill="#18181B" stroke="#27272A"/>
+  <text x="60" y="192" fill="#A1A1AA" font-size="14">$</text>
+  <text x="75" y="192" fill="#EAEAED" font-size="11.5" font-weight="600">ciab CLI</text>
+  <text x="95" y="207" fill="#52525B" font-size="9" text-anchor="middle">Rust binary</text>
+
+  <!-- REST API client -->
+  <rect x="30" y="240" width="130" height="50" rx="8" fill="#18181B" stroke="#27272A"/>
+  <text x="95" y="262" fill="#EAEAED" font-size="11.5" font-weight="600" text-anchor="middle">REST API</text>
+  <text x="95" y="277" fill="#52525B" font-size="9" text-anchor="middle">HTTP / JSON</text>
+
+  <!-- Desktop App -->
+  <rect x="30" y="310" width="130" height="50" rx="8" fill="#18181B" stroke="#27272A"/>
+  <text x="95" y="332" fill="#EAEAED" font-size="11.5" font-weight="600" text-anchor="middle">Desktop App</text>
+  <text x="95" y="347" fill="#52525B" font-size="9" text-anchor="middle">Tauri + React</text>
+
+  <!-- Channels -->
+  <rect x="30" y="388" width="130" height="70" rx="8" fill="#18181B" stroke="#27272A"/>
+  <text x="95" y="410" fill="#EAEAED" font-size="11.5" font-weight="600" text-anchor="middle">Channels</text>
+  <text x="95" y="428" fill="#9EAAB8" font-size="8.5" text-anchor="middle">Slack</text>
+  <text x="95" y="441" fill="#9EAAB8" font-size="8.5" text-anchor="middle">WhatsApp</text>
+  <text x="95" y="454" fill="#9EAAB8" font-size="8.5" text-anchor="middle">Webhooks</text>
+
+  <!-- Client arrows -->
+  <line x1="160" y1="195" x2="218" y2="260" stroke="#3F3F46" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="160" y1="265" x2="218" y2="265" stroke="#3F3F46" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="160" y1="335" x2="218" y2="270" stroke="#3F3F46" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="160" y1="423" x2="218" y2="290" stroke="#3F3F46" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- CENTER: CIAB Control Plane (Gateway)                           -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <!-- Main gateway box -->
+  <rect x="220" y="90" width="310" height="540" rx="10" fill="#111114" stroke="url(#copperGrad)" stroke-width="1.5" stroke-dasharray="none"/>
+
+  <!-- Gateway label -->
+  <rect x="290" y="80" width="170" height="22" rx="11" fill="#C4693D"/>
+  <text x="375" y="95" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" letter-spacing="0.8">CIAB CONTROL PLANE</text>
+
+  <!-- Gateway sub-label -->
+  <text x="375" y="120" text-anchor="middle" fill="#52525B" font-size="8.5" letter-spacing="0.3">ciab-gateway · ciab-api</text>
+
+  <!-- Axum API Server -->
+  <rect x="245" y="135" width="260" height="60" rx="7" fill="#18181B" stroke="#27272A"/>
+  <text x="375" y="158" text-anchor="middle" fill="#D4845E" font-size="12" font-weight="700">Axum REST API</text>
+  <text x="375" y="175" text-anchor="middle" fill="#52525B" font-size="8.5">/sandboxes  /agents  /sessions  /exec  /files  /workspaces</text>
+  <text x="375" y="188" text-anchor="middle" fill="#52525B" font-size="8.5">/credentials  /oauth  /gateway  /channels  /health</text>
+
+  <!-- SSE Streaming -->
+  <rect x="245" y="210" width="260" height="50" rx="7" fill="rgba(196,105,61,0.08)" stroke="#C4693D" stroke-width="0.8" stroke-dasharray="4,3"/>
+  <text x="375" y="232" text-anchor="middle" fill="#E8A878" font-size="11" font-weight="600">SSE Stream Broker</text>
+  <text x="375" y="248" text-anchor="middle" fill="#9E6B4A" font-size="8.5">TextDelta · ToolUse · Provisioning · Logs · Stats</text>
+
+  <!-- 9-Step Provisioning -->
+  <rect x="245" y="275" width="260" height="85" rx="7" fill="url(#provGrad)" stroke="#22C55E" stroke-width="0.6"/>
+  <text x="375" y="295" text-anchor="middle" fill="#22C55E" font-size="10.5" font-weight="600">9-Step Provisioning Pipeline</text>
+
+  <!-- Pipeline steps in 3 columns -->
+  <text x="270" y="315" fill="#6EE7B7" font-size="7.5" font-family="'IBM Plex Mono', monospace">1. Validate</text>
+  <text x="270" y="328" fill="#6EE7B7" font-size="7.5" font-family="'IBM Plex Mono', monospace">2. PrepareImage</text>
+  <text x="270" y="341" fill="#6EE7B7" font-size="7.5" font-family="'IBM Plex Mono', monospace">3. ResolveCreds</text>
+
+  <text x="370" y="315" fill="#6EE7B7" font-size="7.5" font-family="'IBM Plex Mono', monospace">4. CreateSandbox</text>
+  <text x="370" y="328" fill="#6EE7B7" font-size="7.5" font-family="'IBM Plex Mono', monospace">5. StartSandbox</text>
+  <text x="370" y="341" fill="#6EE7B7" font-size="7.5" font-family="'IBM Plex Mono', monospace">6. MountDirs</text>
+
+  <text x="270" y="355" fill="#6EE7B7" font-size="7.5" font-family="'IBM Plex Mono', monospace">7. InjectCreds  8. CloneRepos  9. RunScripts</text>
+
+  <!-- Credential Store -->
+  <rect x="245" y="375" width="125" height="45" rx="7" fill="#18181B" stroke="#27272A"/>
+  <text x="307" y="396" text-anchor="middle" fill="#EAEAED" font-size="10" font-weight="600">Credential Store</text>
+  <text x="307" y="411" text-anchor="middle" fill="#52525B" font-size="8">AES-256-GCM</text>
+
+  <!-- SQLite -->
+  <rect x="380" y="375" width="125" height="45" rx="7" fill="#18181B" stroke="#27272A"/>
+  <text x="442" y="396" text-anchor="middle" fill="#EAEAED" font-size="10" font-weight="600">SQLite</text>
+  <text x="442" y="411" text-anchor="middle" fill="#52525B" font-size="8">ciab-db · sqlx</text>
+
+  <!-- Workspace Engine -->
+  <rect x="245" y="435" width="260" height="45" rx="7" fill="#18181B" stroke="#27272A"/>
+  <text x="375" y="456" text-anchor="middle" fill="#EAEAED" font-size="10" font-weight="600">Workspace Engine</text>
+  <text x="375" y="470" text-anchor="middle" fill="#52525B" font-size="8">Repos · Skills · Pre-commands · Binaries · Agent Config · Subagents</text>
+
+  <!-- Tunnel Providers -->
+  <rect x="245" y="495" width="260" height="48" rx="7" fill="rgba(91,140,168,0.08)" stroke="#5B8CA8" stroke-width="0.6"/>
+  <text x="375" y="514" text-anchor="middle" fill="#6FA0BE" font-size="10" font-weight="600">Remote Access Gateway</text>
+  <text x="375" y="530" text-anchor="middle" fill="#4A7A94" font-size="8.5">bore · Cloudflare Tunnel · ngrok · frp · mDNS LAN</text>
+
+  <!-- Token Auth -->
+  <rect x="245" y="558" width="260" height="35" rx="7" fill="#18181B" stroke="#27272A"/>
+  <text x="375" y="580" text-anchor="middle" fill="#A1A1AA" font-size="9">Token Auth · Scoped Access · Rate Limiting · CORS</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- RIGHT: Runtime Layer + Sandboxes                               -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <!-- Arrow from control plane to runtime -->
+  <line x1="530" y1="300" x2="575" y2="300" stroke="url(#copperGrad)" stroke-width="2" marker-end="url(#arrowCopper)"/>
+  <text x="552" y="293" text-anchor="middle" fill="#52525B" font-size="7.5">exec</text>
+
+  <!-- SSE arrow going back -->
+  <line x1="575" y1="235" x2="530" y2="235" stroke="url(#sseGrad)" stroke-width="1.5" marker-end="url(#arrowCopper)" stroke-dasharray="5,3"/>
+  <text x="552" y="228" text-anchor="middle" fill="#9E6B4A" font-size="7">SSE</text>
+
+  <!-- Runtime selector -->
+  <rect x="580" y="120" width="165" height="50" rx="8" fill="#18181B" stroke="#5B8CA8" stroke-width="1"/>
+  <text x="662" y="142" text-anchor="middle" fill="#6FA0BE" font-size="10.5" font-weight="600">Runtime Backend</text>
+  <text x="662" y="158" text-anchor="middle" fill="#52525B" font-size="8.5">Local · Docker · OpenSandbox</text>
+
+  <!-- ── Sandbox instances ── -->
+
+  <!-- Sandbox 1: Claude Code -->
+  <rect x="577" y="192" width="170" height="100" rx="8" fill="#18181B" stroke="#27272A" stroke-width="1"/>
+  <!-- Inner box (the "box" in claude-in-a-box) -->
+  <rect x="585" y="200" width="154" height="84" rx="5" fill="none" stroke="#3F3F46" stroke-width="0.7" stroke-dasharray="3,2"/>
+
+  <!-- Mini CIAB logo representation -->
+  <rect x="593" y="214" width="30" height="26" rx="3" fill="none" stroke="#C4693D" stroke-width="1.2"/>
+  <text x="608" y="231" text-anchor="middle" fill="#C4693D" font-size="10" font-weight="700">&gt;_</text>
+
+  <text x="632" y="224" fill="#D97757" font-size="11" font-weight="700">Claude Code</text>
+  <text x="632" y="238" fill="#52525B" font-size="7.5">Anthropic · claude-code</text>
+
+  <text x="608" y="262" fill="#52525B" font-size="7.5" font-family="'IBM Plex Mono', monospace">/workspace</text>
+  <text x="608" y="275" fill="#3F3F46" font-size="7" font-family="'IBM Plex Mono', monospace">repos · creds · env</text>
+  <circle cx="725" cy="214" r="4" fill="#22C55E" opacity="0.8"/>
+  <text x="725" y="228" text-anchor="middle" fill="#22C55E" font-size="6.5">running</text>
+
+  <!-- Sandbox 2: Codex -->
+  <rect x="577" y="307" width="170" height="80" rx="8" fill="#18181B" stroke="#27272A" stroke-width="1"/>
+  <rect x="585" y="315" width="154" height="64" rx="5" fill="none" stroke="#3F3F46" stroke-width="0.7" stroke-dasharray="3,2"/>
+
+  <rect x="593" y="325" width="30" height="26" rx="3" fill="none" stroke="#10A37F" stroke-width="1.2"/>
+  <text x="608" y="342" text-anchor="middle" fill="#10A37F" font-size="10" font-weight="700">&gt;_</text>
+
+  <text x="632" y="337" fill="#10A37F" font-size="11" font-weight="700">Codex</text>
+  <text x="632" y="351" fill="#52525B" font-size="7.5">OpenAI · codex</text>
+  <text x="608" y="371" fill="#52525B" font-size="7.5" font-family="'IBM Plex Mono', monospace">/workspace</text>
+  <circle cx="725" cy="327" r="4" fill="#22C55E" opacity="0.8"/>
+  <text x="725" y="341" text-anchor="middle" fill="#22C55E" font-size="6.5">running</text>
+
+  <!-- Sandbox 3: Gemini -->
+  <rect x="577" y="402" width="170" height="80" rx="8" fill="#18181B" stroke="#27272A" stroke-width="1"/>
+  <rect x="585" y="410" width="154" height="64" rx="5" fill="none" stroke="#3F3F46" stroke-width="0.7" stroke-dasharray="3,2"/>
+
+  <rect x="593" y="420" width="30" height="26" rx="3" fill="none" stroke="#4285F4" stroke-width="1.2"/>
+  <text x="608" y="437" text-anchor="middle" fill="#4285F4" font-size="10" font-weight="700">&gt;_</text>
+
+  <text x="632" y="432" fill="#4285F4" font-size="11" font-weight="700">Gemini CLI</text>
+  <text x="632" y="446" fill="#52525B" font-size="7.5">Google · gemini</text>
+  <text x="608" y="466" fill="#52525B" font-size="7.5" font-family="'IBM Plex Mono', monospace">/workspace</text>
+  <circle cx="725" cy="422" r="4" fill="#EAB308" opacity="0.8"/>
+  <text x="725" y="436" text-anchor="middle" fill="#EAB308" font-size="6.5">paused</text>
+
+  <!-- Sandbox 4: Cursor -->
+  <rect x="577" y="497" width="170" height="80" rx="8" fill="#18181B" stroke="#27272A" stroke-width="1"/>
+  <rect x="585" y="505" width="154" height="64" rx="5" fill="none" stroke="#3F3F46" stroke-width="0.7" stroke-dasharray="3,2"/>
+
+  <rect x="593" y="515" width="30" height="26" rx="3" fill="none" stroke="#7C3AED" stroke-width="1.2"/>
+  <text x="608" y="532" text-anchor="middle" fill="#7C3AED" font-size="10" font-weight="700">&gt;_</text>
+
+  <text x="632" y="527" fill="#7C3AED" font-size="11" font-weight="700">Cursor</text>
+  <text x="632" y="541" fill="#52525B" font-size="7.5">Cursor · cursor-agent</text>
+  <text x="608" y="561" fill="#52525B" font-size="7.5" font-family="'IBM Plex Mono', monospace">/workspace</text>
+  <circle cx="725" cy="517" r="4" fill="#71717A" opacity="0.8"/>
+  <text x="725" y="531" text-anchor="middle" fill="#71717A" font-size="6.5">stopped</text>
+
+  <!-- Sandbox group label -->
+  <text x="662" y="605" text-anchor="middle" fill="#3F3F46" font-size="8" letter-spacing="1">ISOLATED SANDBOXES</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- FAR RIGHT: Provider APIs                                       -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <!-- Arrows from sandboxes to providers -->
+  <line x1="747" y1="242" x2="800" y2="242" stroke="#3F3F46" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="747" y1="347" x2="800" y2="347" stroke="#3F3F46" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="747" y1="442" x2="800" y2="442" stroke="#3F3F46" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="747" y1="537" x2="800" y2="537" stroke="#3F3F46" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Provider boxes -->
+  <rect x="805" y="222" width="120" height="40" rx="6" fill="#18181B" stroke="#D97757" stroke-width="0.7"/>
+  <text x="865" y="245" text-anchor="middle" fill="#D97757" font-size="9.5" font-weight="600">Anthropic API</text>
+
+  <rect x="805" y="327" width="120" height="40" rx="6" fill="#18181B" stroke="#10A37F" stroke-width="0.7"/>
+  <text x="865" y="350" text-anchor="middle" fill="#10A37F" font-size="9.5" font-weight="600">OpenAI API</text>
+
+  <rect x="805" y="422" width="120" height="40" rx="6" fill="#18181B" stroke="#4285F4" stroke-width="0.7"/>
+  <text x="865" y="445" text-anchor="middle" fill="#4285F4" font-size="9.5" font-weight="600">Google AI API</text>
+
+  <rect x="805" y="517" width="120" height="40" rx="6" fill="#18181B" stroke="#7C3AED" stroke-width="0.7"/>
+  <text x="865" y="540" text-anchor="middle" fill="#7C3AED" font-size="9.5" font-weight="600">Cursor API</text>
+
+  <!-- Provider column label -->
+  <text x="865" y="580" text-anchor="middle" fill="#3F3F46" font-size="8" letter-spacing="1">PROVIDERS</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- BOTTOM: Legend                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <rect x="30" y="640" width="1040" height="55" rx="8" fill="#111114" stroke="#1E1E21"/>
+
+  <!-- Legend items -->
+  <line x1="55" y1="665" x2="85" y2="665" stroke="#3F3F46" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="92" y="669" fill="#52525B" font-size="8.5">Request</text>
+
+  <line x1="155" y1="665" x2="185" y2="665" stroke="#C4693D" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowCopper)"/>
+  <text x="192" y="669" fill="#52525B" font-size="8.5">SSE Stream</text>
+
+  <circle cx="275" cy="665" r="4" fill="#22C55E" opacity="0.8"/>
+  <text x="285" y="669" fill="#52525B" font-size="8.5">Running</text>
+
+  <circle cx="345" cy="665" r="4" fill="#EAB308" opacity="0.8"/>
+  <text x="355" y="669" fill="#52525B" font-size="8.5">Paused</text>
+
+  <circle cx="410" cy="665" r="4" fill="#71717A" opacity="0.8"/>
+  <text x="420" y="669" fill="#52525B" font-size="8.5">Stopped</text>
+
+  <rect x="480" y="659" width="14" height="12" rx="2" fill="none" stroke="#C4693D" stroke-width="1"/>
+  <text x="500" y="669" fill="#52525B" font-size="8.5">Control Plane</text>
+
+  <rect x="590" y="659" width="14" height="12" rx="2" fill="none" stroke="#5B8CA8" stroke-width="1"/>
+  <text x="610" y="669" fill="#52525B" font-size="8.5">Runtime</text>
+
+  <rect x="670" y="659" width="14" height="12" rx="2" fill="none" stroke="#22C55E" stroke-width="0.6"/>
+  <text x="690" y="669" fill="#52525B" font-size="8.5">Provisioning</text>
+
+  <!-- Version / branding -->
+  <text x="1040" y="669" text-anchor="end" fill="#27272A" font-size="8" font-family="'IBM Plex Mono', monospace">github.com/shakedaskayo/ciab</text>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Decorative: SSE event stream animation hint                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+
+  <!-- SSE event badges flowing from broker -->
+  <rect x="538" y="212" width="28" height="14" rx="7" fill="rgba(196,105,61,0.2)" stroke="none"/>
+  <text x="552" y="222" text-anchor="middle" fill="#E8A878" font-size="6" font-weight="600">txt</text>
+
+  <rect x="538" y="232" width="28" height="14" rx="7" fill="rgba(196,105,61,0.15)" stroke="none"/>
+  <text x="552" y="242" text-anchor="middle" fill="#C4693D" font-size="6" font-weight="600">tool</text>
+
+  <rect x="538" y="252" width="28" height="14" rx="7" fill="rgba(196,105,61,0.1)" stroke="none"/>
+  <text x="552" y="262" text-anchor="middle" fill="#A85530" font-size="6" font-weight="600">log</text>
+</svg>

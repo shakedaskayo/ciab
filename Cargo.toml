@@ -1,0 +1,72 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/ciab-core",
+    "crates/ciab-db",
+    "crates/ciab-streaming",
+    "crates/ciab-sandbox",
+    "crates/ciab-agent-claude",
+    "crates/ciab-agent-codex",
+    "crates/ciab-agent-gemini",
+    "crates/ciab-agent-cursor",
+    "crates/ciab-credentials",
+    "crates/ciab-provisioning",
+    "crates/ciab-gateway",
+    "crates/ciab-channels",
+    "crates/ciab-api",
+    "crates/ciab-cli",
+    "tests/integration",
+    "desktop/src-tauri",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/shakedaskayo/ciab"
+homepage = "https://shakedaskayo.github.io/ciab"
+description = "Manage coding agent sandboxes with a single API"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+async-trait = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+thiserror = "2"
+anyhow = "1"
+axum = { version = "0.8", features = ["ws"] }
+axum-extra = { version = "0.10", features = ["typed-header"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace", "timeout", "fs"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
+clap = { version = "4", features = ["derive", "env"] }
+toml = "0.8"
+dashmap = "6"
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono", "uuid"] }
+oauth2 = "5"
+aes-gcm = "0.10"
+comfy-table = "7"
+bytes = "1"
+futures = "0.3"
+tokio-stream = { version = "0.1", features = ["sync"] }
+async-stream = "0.3"
+
+# Internal crates
+ciab-core = { path = "crates/ciab-core" }
+ciab-db = { path = "crates/ciab-db" }
+ciab-streaming = { path = "crates/ciab-streaming" }
+ciab-sandbox = { path = "crates/ciab-sandbox" }
+ciab-agent-claude = { path = "crates/ciab-agent-claude" }
+ciab-agent-codex = { path = "crates/ciab-agent-codex" }
+ciab-agent-gemini = { path = "crates/ciab-agent-gemini" }
+ciab-agent-cursor = { path = "crates/ciab-agent-cursor" }
+ciab-credentials = { path = "crates/ciab-credentials" }
+ciab-provisioning = { path = "crates/ciab-provisioning" }
+ciab-gateway = { path = "crates/ciab-gateway" }
+ciab-channels = { path = "crates/ciab-channels" }
+ciab-api = { path = "crates/ciab-api" }
+ciab-cli = { path = "crates/ciab-cli" }

@@ -1,0 +1,190 @@
+[server]
+host = "0.0.0.0"
+port = 9090
+workers = 4
+request_timeout_secs = 300
+cors_origins = ["*"]
+# Serve the built web UI from this directory. Enables browser access via gateway URLs.
+# Build with: cd desktop && npm run build
+# web_ui_dir = "desktop/dist"
+
+# --- Runtime ---
+# CIAB supports multiple runtime backends:
+#   "local"       — Run agents as local processes (no containers needed)
+#   "docker"      — Run agents in Docker containers
+#   "opensandbox" — Run agents in OpenSandbox containers
+
+[runtime]
+backend = "local"
+# local_workdir = "/tmp/ciab-sandboxes"
+# local_max_processes = 10
+
+# For Docker backend:
+# backend = "docker"
+# docker_socket = "unix:///var/run/docker.sock"
+
+# For OpenSandbox backend:
+# backend = "opensandbox"
+# opensandbox_url = "http://localhost:8000"
+# opensandbox_api_key = "${OPENSANDBOX_API_KEY}"
+
+# --- Agent Providers ---
+
+[agents]
+default_provider = "claude-code"
+
+# Local mode: point to the binary on your PATH or give an absolute path
+[agents.providers.claude-code]
+enabled = true
+binary = "claude"                            # for local backend
+# image = "ghcr.io/shakedaskayo/ciab-claude:latest"  # for docker/opensandbox backend
+default_model = "claude-sonnet-4-20250514"
+api_key_env = "ANTHROPIC_API_KEY"
+
+[agents.providers.codex]
+enabled = true
+binary = "codex"
+# image = "ghcr.io/shakedaskayo/ciab-codex:latest"
+api_key_env = "OPENAI_API_KEY"
+
+[agents.providers.gemini]
+enabled = false
+binary = "gemini"
+# image = "ghcr.io/shakedaskayo/ciab-gemini:latest"
+api_key_env = "GOOGLE_API_KEY"
+
+[agents.providers.cursor]
+enabled = false
+binary = "cursor"
+# image = "ghcr.io/shakedaskayo/ciab-cursor:latest"
+api_key_env = "CURSOR_API_KEY"
+
+# --- Credentials ---
+
+[credentials]
+backend = "sqlite"
+encryption_key_env = "CIAB_ENCRYPTION_KEY"
+
+# --- Provisioning ---
+
+[provisioning]
+timeout_secs = 300
+max_script_size_bytes = 1048576
+
+# --- Streaming ---
+
+[streaming]
+buffer_size = 500
+keepalive_interval_secs = 15
+max_stream_duration_secs = 3600
+
+# --- Security ---
+
+[security]
+api_keys = []
+drop_capabilities = ["NET_RAW", "SYS_ADMIN"]
+
+# --- Logging ---
+
+[logging]
+level = "info"
+format = "json"
+
+# --- Gateway ---
+# Gateway enables remote access via tunnels, LAN discovery, and scoped tokens.
+# When disabled (default), CIAB works exactly as before.
+#
+# Supported tunnel providers: bore, cloudflare, ngrok, frp
+# Switch providers via tunnel_provider or in the desktop UI settings.
+
+# [gateway]
+# enabled = true
+# tunnel_provider = "bore"   # Active provider: "bore", "cloudflare", "ngrok", "frp"
+
+# LAN discovery via mDNS/DNS-SD (advertises _ciab._tcp.local.)
+# [gateway.lan]
+# enabled = true
+# mdns_name = "ciab"         # Advertised as ciab.local
+# advertise_port = 9090
+
+# --- Bore (https://github.com/ekzhang/bore) ---
+# Simple, zero-config tunnels. Uses bore.pub by default (free).
+# Auto-installs via `cargo install bore-cli` if not found on PATH.
+# [gateway.bore]
+# enabled = true
+# binary = "bore"
+# server = "bore.pub"        # Public bore relay server
+# server_port = 0            # 0 = random port assigned by server
+# secret = ""                # Optional shared secret for the bore server
+# auto_install = true        # Download & install bore if not found
+
+# --- Cloudflare Tunnel (cloudflared) ---
+# Two modes:
+#   Quick tunnel (no account needed): omit tunnel_token — gets a free *.trycloudflare.com URL
+#   Named tunnel (persistent URL): set tunnel_token from Cloudflare dashboard
+# [gateway.cloudflare]
+# enabled = false
+# binary = "cloudflared"
+# tunnel_token = ""          # From: cloudflare zero trust > tunnels > your-tunnel > token
+# tunnel_name = ""           # Optional: display name for the tunnel
+# auto_install = true        # Download cloudflared if not found
+
+# --- ngrok ---
+# Requires a free ngrok account for authtoken. Paid plans unlock custom domains.
+# [gateway.ngrok]
+# enabled = false
+# binary = "ngrok"
+# authtoken = "${NGROK_AUTHTOKEN}"
+# domain = ""                # Custom domain (paid plans only)
+# region = "us"              # us, eu, ap, au, sa, jp, in
+# auto_install = true        # Download ngrok if not found
+
+# --- FRP (frp tunnels via a self-hosted frps server) ---
+# [gateway.frp]
+# enabled = false
+# frpc_binary = "frpc"
+# server_addr = "your-frps-server.example.com"
+# server_port = 7000
+# auth_token = "${FRP_AUTH_TOKEN}"
+# subdomain_prefix = "ciab"
+# tls_enable = true
+
+# URL routing mode for per-sandbox access
+# [gateway.routing]
+# mode = "path"              # "path" (default) or "subdomain"
+# base_domain = "example.com"
+
+# Advanced settings (k8s, custom DNS)
+# [gateway.advanced]
+# custom_dns_cname = "ciab.example.com"
+# k8s_ingress_class = "nginx"
+# [gateway.advanced.k8s_ingress_annotations]
+# "nginx.ingress.kubernetes.io/proxy-body-size" = "50m"
+
+# --- OAuth ---
+
+# [oauth.providers.github]
+# client_id = "${GITHUB_CLIENT_ID}"
+# client_secret_env = "GITHUB_CLIENT_SECRET"
+# auth_url = "https://github.com/login/oauth/authorize"
+# token_url = "https://github.com/login/oauth/access_token"
+# scopes = ["repo", "read:org"]
+# redirect_uri = "http://localhost:8080/api/v1/oauth/github/callback"
+
+# --- Channels ---
+# Channels enable external messaging platform integration (WhatsApp, Slack, webhooks).
+# When disabled (default), channel API endpoints still work for CRUD but adapters won't start.
+
+# [channels]
+# enabled = false
+# reaper_interval_secs = 60   # How often to check for expired auto-provisioned sandboxes
+
+# [channels.whatsapp]
+# enabled = false
+# session_dir = "/tmp/ciab-whatsapp-sessions"
+
+# [channels.slack]
+# enabled = false
+
+# [channels.webhook]
+# enabled = true

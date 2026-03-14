@@ -1,0 +1,25 @@
+[package]
+name = "ciab-gateway"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ciab-core = { workspace = true }
+ciab-db = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+dashmap = { workspace = true }
+async-trait = { workspace = true }
+thiserror = { workspace = true }
+rand = "0.8"
+sha2 = "0.10"
+base64 = "0.22"
+mdns-sd = "0.11"
+hostname = "0.4"
+which = "7"
+dirs = "6"
+reqwest = { version = "0.12", features = ["json"] }

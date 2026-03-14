@@ -1,0 +1,144 @@
+# Configuration Reference
+
+CIAB is configured via a TOML file (default: `config.toml`).
+
+Generate a default config with `ciab config init`.
+
+## Full Reference
+
+```toml
+[server]
+host = "0.0.0.0"              # Bind address
+port = 8080                    # HTTP port
+workers = 4                    # Worker threads (default: CPU count)
+request_timeout_secs = 300     # Request timeout
+cors_origins = ["*"]           # CORS allowed origins
+
+[runtime]
+opensandbox_url = "http://localhost:8000"   # OpenSandbox API URL
+# opensandbox_api_key = "${OPENSANDBOX_API_KEY}"  # Optional API key
+
+[agents]
+default_provider = "claude-code"   # Default agent provider
+
+[agents.providers.claude-code]
+enabled = true
+image = "ghcr.io/shakedaskayo/ciab-claude:latest"
+default_model = "claude-sonnet-4-20250514"
+api_key_env = "ANTHROPIC_API_KEY"
+
+[agents.providers.codex]
+enabled = true
+image = "ghcr.io/shakedaskayo/ciab-codex:latest"
+api_key_env = "OPENAI_API_KEY"
+
+[agents.providers.gemini]
+enabled = false
+image = "ghcr.io/shakedaskayo/ciab-gemini:latest"
+api_key_env = "GOOGLE_API_KEY"
+
+[agents.providers.cursor]
+enabled = false
+image = "ghcr.io/shakedaskayo/ciab-cursor:latest"
+api_key_env = "CURSOR_API_KEY"
+
+[credentials]
+backend = "sqlite"                     # Storage backend
+encryption_key_env = "CIAB_ENCRYPTION_KEY"  # Env var with AES key
+
+[provisioning]
+timeout_secs = 300                     # Max provisioning time
+max_script_size_bytes = 1048576        # Max script size (1MB)
+
+[streaming]
+buffer_size = 500                      # Events buffered per sandbox
+keepalive_interval_secs = 15           # SSE heartbeat interval
+max_stream_duration_secs = 3600        # Max SSE connection duration
+
+[security]
+api_keys = []                          # API keys (empty = auth disabled)
+drop_capabilities = ["NET_RAW", "SYS_ADMIN"]  # Linux capabilities to drop
+
+[logging]
+level = "info"                         # Log level: trace, debug, info, warn, error
+format = "json"                        # Log format: json, pretty
+
+# Optional OAuth configuration
+# [oauth.providers.github]
+# client_id = "${GITHUB_CLIENT_ID}"
+# client_secret_env = "GITHUB_CLIENT_SECRET"
+# auth_url = "https://github.com/login/oauth/authorize"
+# token_url = "https://github.com/login/oauth/access_token"
+# scopes = ["repo", "read:org"]
+# redirect_uri = "http://localhost:8080/api/v1/oauth/github/callback"
+```
+
+## Section Details
+
+### `[server]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `host` | string | `0.0.0.0` | Bind address |
+| `port` | u16 | `8080` | HTTP port |
+| `workers` | u16 | CPU count | Worker threads |
+| `request_timeout_secs` | u32 | `300` | Global request timeout |
+| `cors_origins` | string[] | `["*"]` | CORS allowed origins |
+
+### `[runtime]`
+
+| Key | Type | Required | Description |
+|-----|------|----------|-------------|
+| `opensandbox_url` | string | Yes | OpenSandbox API base URL |
+| `opensandbox_api_key` | string | No | OpenSandbox API key |
+
+### `[agents]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `default_provider` | string | `claude-code` | Default provider for new sandboxes |
+
+### `[agents.providers.<name>]`
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `enabled` | bool | Whether this provider is available |
+| `image` | string | Container image |
+| `default_model` | string | Default AI model |
+| `api_key_env` | string | Env var for the API key |
+
+### `[credentials]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `backend` | string | `sqlite` | Storage backend |
+| `encryption_key_env` | string | `CIAB_ENCRYPTION_KEY` | Env var with the AES encryption key |
+
+### `[provisioning]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `timeout_secs` | u32 | `300` | Max provisioning duration |
+| `max_script_size_bytes` | u64 | `1048576` | Max provisioning script size |
+
+### `[streaming]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `buffer_size` | u32 | `500` | Events buffered per sandbox for replay |
+| `keepalive_interval_secs` | u32 | `15` | SSE heartbeat interval |
+| `max_stream_duration_secs` | u32 | `3600` | Max SSE connection lifetime |
+
+### `[security]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `api_keys` | string[] | `[]` | Valid API keys (empty = auth disabled) |
+| `drop_capabilities` | string[] | `["NET_RAW", "SYS_ADMIN"]` | Linux capabilities to drop from containers |
+
+### `[logging]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `level` | string | `info` | Log level |
+| `format` | string | `json` | Output format: `json` or `pretty` |

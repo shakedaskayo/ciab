@@ -1,0 +1,220 @@
+# CIAB Workspace Configuration
+# This file defines a complete environment for a coding agent sandbox.
+# Use with: ciab workspace import workspace.toml
+# Or via API: POST /api/v1/workspaces/import
+
+[workspace]
+name = "my-project"
+description = "Full-stack web application workspace"
+timeout_secs = 3600
+
+# Container image (only needed for docker/opensandbox runtimes):
+# image = "ghcr.io/shakedaskayo/ciab-claude:latest"
+
+# --- Runtime ---
+# Per-workspace runtime backend (default inherits from server config.toml)
+# Options: "default", "local", "opensandbox", "docker"
+
+[workspace.runtime]
+backend = "local"
+# local_workdir = "/tmp/ciab-workspaces"  # override local backend workdir
+
+# --- Repositories ---
+# Git repositories to clone into the sandbox
+
+[[workspace.repositories]]
+url = "https://github.com/shakedaskayo/frontend.git"
+branch = "main"
+dest_path = "/workspace/frontend"
+depth = 1
+submodules = true
+strategy = "clone"           # "clone" (default) or "worktree"
+
+[[workspace.repositories]]
+url = "https://github.com/shakedaskayo/backend.git"
+branch = "develop"
+dest_path = "/workspace/backend"
+credential_id = "github-token"
+strategy = "worktree"        # Use worktree for parallel sessions on the same repo
+
+# --- Local Directory Mounts ---
+# Mount local directories into the sandbox (no Docker required)
+
+[[workspace.local_mounts]]
+source = "/Users/me/projects/my-app"
+dest_path = "/workspace/my-app"
+sync_mode = "copy"                    # Isolated copy — changes don't affect original
+exclude_patterns = ["node_modules/**", ".git/**", "target/**"]
+writeback = false                     # Set true to sync changes back on sandbox stop
+
+[[workspace.local_mounts]]
+source = "/Users/me/shared-config"
+sync_mode = "link"                    # Symlink — changes directly affect original files
+
+# [[workspace.local_mounts]]
+# source = "/Users/me/data"
+# sync_mode = "bind"                  # Bind mount (Docker/container runtimes only)
+
+# --- Environment File ---
+# Load environment variables from a .env file (explicit env_vars take precedence)
+# env_file = ".env.development"
+
+# --- Skills ---
+# Reusable agent capabilities (compatible with skills.sh)
+
+[[workspace.skills]]
+source = "vercel-labs/ai-sdk-best-practices"
+
+[[workspace.skills]]
+source = "shakedaskayo/internal-coding-standards"
+version = "v2.1"
+
+[[workspace.skills]]
+source = "community/typescript-patterns"
+enabled = true
+
+# --- Pre-commands ---
+# Commands to run before the agent starts
+
+[[workspace.pre_commands]]
+name = "Install frontend deps"
+command = "npm"
+args = ["install"]
+workdir = "/workspace/frontend"
+timeout_secs = 120
+
+[[workspace.pre_commands]]
+name = "Install backend deps"
+command = "cargo"
+args = ["build"]
+workdir = "/workspace/backend"
+fail_on_error = true
+timeout_secs = 300
+
+[[workspace.pre_commands]]
+name = "Setup database"
+command = "bash"
+args = ["-c", "cd /workspace/backend && cargo sqlx database setup"]
+
+# --- Binaries ---
+# Additional tools to install
+
+[[workspace.binaries]]
+name = "ripgrep"
+method = "apt"
+
+[[workspace.binaries]]
+name = "fd-find"
+method = "apt"
+
+[[workspace.binaries]]
+name = "jq"
+method = "apt"
+
+[[workspace.binaries]]
+name = "typescript"
+method = "npm"
+
+# --- Filesystem ---
+
+[workspace.filesystem]
+workdir = "/workspace"
+cow_isolation = false
+persist_changes = true
+max_file_size_bytes = 10485760  # 10MB
+exclude_patterns = [
+    "**/node_modules/**",
+    "**/target/**",
+    "**/.git/**",
+]
+
+# --- AgentFS (CoW Isolation) ---
+# Wrap the agent process with agentfs for copy-on-write filesystem isolation.
+# Requires the `agentfs` binary to be available in the sandbox.
+
+[workspace.filesystem.agentfs]
+enabled = false
+# binary = "agentfs"          # Path to the agentfs binary (default: "agentfs")
+# db_path = "/tmp/agentfs.db" # Custom database path (auto-generated if omitted)
+operation_logging = true       # Log filesystem operations
+
+# --- Agent ---
+
+[workspace.agent]
+provider = "claude-code"
+model = "claude-sonnet-4-20250514"
+tools_enabled = true
+system_prompt = """
+You are a senior full-stack developer working on this project.
+The frontend is in /workspace/frontend (React + TypeScript).
+The backend is in /workspace/backend (Rust + Axum).
+Follow the project's coding standards and write tests for all changes.
+"""
+
+# allowed_tools = []  # Empty = all allowed
+# denied_tools = ["dangerous_tool"]
+
+[[workspace.agent.mcp_servers]]
+name = "filesystem"
+command = "npx"
+args = ["-y", "@anthropic-ai/mcp-server-filesystem", "/workspace"]
+
+# --- Subagents ---
+
+[[workspace.subagents]]
+name = "reviewer"
+provider = "claude-code"
+model = "claude-sonnet-4-20250514"
+activation = "on_demand"
+system_prompt = "You are a code reviewer. Review changes for correctness, security, and style."
+
+[[workspace.subagents]]
+name = "test-runner"
+provider = "claude-code"
+activation = "on_demand"
+system_prompt = "You run tests and report results. Focus on test coverage and failure analysis."
+
+# --- Credentials ---
+# References to secrets (stored in CIAB vault or external providers)
+
+[[workspace.credentials]]
+name = "anthropic-key"
+vault_provider = "local"
+env_var = "ANTHROPIC_API_KEY"
+
+[[workspace.credentials]]
+name = "github-token"
+vault_provider = "local"
+env_var = "GITHUB_TOKEN"
+
+# [[workspace.credentials]]
+# name = "aws-credentials"
+# vault_provider = "aws-secrets-manager"
+# vault_path = "prod/ciab/aws-creds"
+
+# --- Environment Variables ---
+
+[workspace.env_vars]
+RUST_LOG = "info"
+NODE_ENV = "development"
+DATABASE_URL = "sqlite:///workspace/backend/dev.db"
+
+# --- Resource Limits ---
+
+[workspace.resource_limits]
+cpu_cores = 2.0
+memory_mb = 4096
+disk_mb = 10240
+
+# --- Network ---
+
+[workspace.network]
+enabled = true
+allowed_hosts = ["github.com", "registry.npmjs.org", "crates.io"]
+
+# --- Labels ---
+
+[workspace.labels]
+team = "platform"
+project = "my-project"
+environment = "development"

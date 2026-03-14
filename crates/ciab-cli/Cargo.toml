@@ -1,0 +1,36 @@
+[package]
+name = "ciab-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "ciab"
+path = "src/main.rs"
+
+[dependencies]
+ciab-core = { workspace = true }
+ciab-api = { workspace = true }
+ciab-db = { workspace = true }
+ciab-sandbox = { workspace = true }
+ciab-streaming = { workspace = true }
+ciab-credentials = { workspace = true }
+ciab-provisioning = { workspace = true }
+ciab-gateway = { workspace = true }
+ciab-agent-claude = { workspace = true }
+ciab-agent-codex = { workspace = true }
+ciab-agent-gemini = { workspace = true }
+ciab-agent-cursor = { workspace = true }
+tokio = { workspace = true }
+clap = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+comfy-table = { workspace = true }
+toml = { workspace = true }
+futures = { workspace = true }
+tokio-stream = { workspace = true }
+anyhow = { workspace = true }

@@ -1,0 +1,314 @@
+/* ═══════════════════════════════════════════════════════════════════
+   CIAB — Brand-aligned MkDocs theme
+   Matches the desktop app's dark-first design system
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Brand tokens ─────────────────────────────────────────────────── */
+:root {
+  --md-primary-fg-color: #C4693D;
+  --md-primary-fg-color--light: #D4845E;
+  --md-primary-fg-color--dark: #A85530;
+  --md-accent-fg-color: #5B8CA8;
+  --md-accent-fg-color--transparent: rgba(91, 140, 168, 0.1);
+
+  /* App background palette (light mode overrides) */
+  --md-default-bg-color: #fafafa;
+  --md-default-bg-color--light: #f5f5f5;
+  --md-default-bg-color--lighter: #ffffff;
+  --md-code-bg-color: #f0eeeb;
+
+  /* Typography */
+  --md-text-font: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --md-code-font: "IBM Plex Mono", "JetBrains Mono", monospace;
+}
+
+/* ── Dark mode (slate) — matches desktop app exactly ──────────────── */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #D4845E;
+  --md-primary-fg-color--light: #E8A878;
+  --md-primary-fg-color--dark: #C4693D;
+  --md-accent-fg-color: #6FA0BE;
+  --md-accent-fg-color--transparent: rgba(111, 160, 190, 0.1);
+
+  /* Match desktop app backgrounds */
+  --md-default-bg-color: #09090B;
+  --md-default-bg-color--light: #111114;
+  --md-default-bg-color--lighter: #18181B;
+  --md-default-fg-color: #EAEAED;
+  --md-default-fg-color--light: #A1A1AA;
+  --md-default-fg-color--lighter: #71717A;
+  --md-default-fg-color--lightest: #27272A;
+  --md-code-bg-color: #111114;
+  --md-code-fg-color: #A1A1AA;
+  --md-typeset-color: #EAEAED;
+
+  /* Footer / nav surfaces */
+  --md-footer-bg-color: #09090B;
+  --md-footer-bg-color--dark: #050506;
+  --md-footer-fg-color: #A1A1AA;
+  --md-footer-fg-color--light: #52525B;
+  --md-footer-fg-color--lighter: #3F3F46;
+}
+
+/* Sidebar surface in dark mode */
+[data-md-color-scheme="slate"] .md-sidebar {
+  background: #09090B;
+}
+
+[data-md-color-scheme="slate"] .md-nav__link:hover {
+  color: #D4845E;
+}
+
+[data-md-color-scheme="slate"] .md-nav__link--active {
+  color: #D4845E;
+  font-weight: 600;
+}
+
+/* Header bar in dark mode */
+[data-md-color-scheme="slate"] .md-header {
+  background: rgba(9, 9, 11, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #27272A;
+}
+
+/* Tabs bar in dark mode */
+[data-md-color-scheme="slate"] .md-tabs {
+  background: #111114;
+  border-bottom: 1px solid #27272A;
+}
+
+/* Search in dark mode */
+[data-md-color-scheme="slate"] .md-search__input {
+  background: #18181B;
+  border: 1px solid #27272A;
+}
+
+[data-md-color-scheme="slate"] .md-search__input::placeholder {
+  color: #52525B;
+}
+
+/* Code blocks in dark mode — match desktop's code theme */
+[data-md-color-scheme="slate"] .md-typeset code {
+  background: #111114;
+  color: #EAEAED;
+  border: 1px solid #27272A;
+}
+
+[data-md-color-scheme="slate"] .md-typeset pre > code {
+  border: 1px solid #27272A;
+  border-radius: 0.5rem;
+}
+
+[data-md-color-scheme="slate"] .highlight .hll { background: #222225; }
+[data-md-color-scheme="slate"] .highlight .c,
+[data-md-color-scheme="slate"] .highlight .cm,
+[data-md-color-scheme="slate"] .highlight .c1,
+[data-md-color-scheme="slate"] .highlight .cs { color: #52525B; font-style: italic; }
+[data-md-color-scheme="slate"] .highlight .k,
+[data-md-color-scheme="slate"] .highlight .kn,
+[data-md-color-scheme="slate"] .highlight .kp,
+[data-md-color-scheme="slate"] .highlight .kr,
+[data-md-color-scheme="slate"] .highlight .kd,
+[data-md-color-scheme="slate"] .highlight .kt { color: #c678dd; }
+[data-md-color-scheme="slate"] .highlight .s,
+[data-md-color-scheme="slate"] .highlight .s1,
+[data-md-color-scheme="slate"] .highlight .s2,
+[data-md-color-scheme="slate"] .highlight .sa,
+[data-md-color-scheme="slate"] .highlight .sb,
+[data-md-color-scheme="slate"] .highlight .dl { color: #98c379; }
+[data-md-color-scheme="slate"] .highlight .mi,
+[data-md-color-scheme="slate"] .highlight .mf,
+[data-md-color-scheme="slate"] .highlight .mh,
+[data-md-color-scheme="slate"] .highlight .mo,
+[data-md-color-scheme="slate"] .highlight .mb { color: #d19a66; }
+[data-md-color-scheme="slate"] .highlight .na,
+[data-md-color-scheme="slate"] .highlight .nb { color: #d19a66; }
+[data-md-color-scheme="slate"] .highlight .nc,
+[data-md-color-scheme="slate"] .highlight .nf,
+[data-md-color-scheme="slate"] .highlight .nn { color: #e5c07b; }
+[data-md-color-scheme="slate"] .highlight .nv,
+[data-md-color-scheme="slate"] .highlight .vc,
+[data-md-color-scheme="slate"] .highlight .vg,
+[data-md-color-scheme="slate"] .highlight .vi { color: #e06c75; }
+[data-md-color-scheme="slate"] .highlight .nt { color: #e06c75; }
+[data-md-color-scheme="slate"] .highlight .ne { color: #e06c75; }
+[data-md-color-scheme="slate"] .highlight .o,
+[data-md-color-scheme="slate"] .highlight .p { color: #EAEAED; }
+[data-md-color-scheme="slate"] .highlight .gh,
+[data-md-color-scheme="slate"] .highlight .gu { color: #5B8CA8; font-weight: bold; }
+
+/* Admonitions in dark mode */
+[data-md-color-scheme="slate"] .md-typeset .admonition,
+[data-md-color-scheme="slate"] .md-typeset details {
+  background: #111114;
+  border-color: #27272A;
+}
+
+/* Tables in dark mode */
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
+  background: #18181B;
+  color: #EAEAED;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) td {
+  border-color: #27272A;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) tr:hover td {
+  background: rgba(34, 34, 37, 0.5);
+}
+
+/* ── Selection ────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(196, 105, 61, 0.3);
+}
+
+/* ── Scrollbar — thin, dark ───────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272A;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3F3F46;
+}
+
+/* ── Hero section ─────────────────────────────────────────────────── */
+.md-typeset .ciab-hero {
+  text-align: center;
+  padding: 3rem 0 2rem;
+}
+
+.md-typeset .ciab-hero img {
+  max-width: 280px;
+  margin-bottom: 1rem;
+}
+
+.md-typeset .ciab-hero h1 {
+  font-size: 2.6rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.md-typeset .ciab-hero .tagline {
+  font-size: 1.25rem;
+  color: var(--md-default-fg-color--light);
+  margin-bottom: 2rem;
+}
+
+/* Hero buttons */
+.md-typeset .ciab-hero .md-button--primary {
+  background-color: var(--md-primary-fg-color);
+  color: #fff;
+  border: none;
+  box-shadow: 0 1px 3px rgba(196, 105, 61, 0.2);
+  transition: all 0.15s;
+}
+
+.md-typeset .ciab-hero .md-button--primary:hover {
+  background-color: var(--md-primary-fg-color--dark);
+  box-shadow: 0 2px 8px rgba(196, 105, 61, 0.3);
+  transform: translateY(-1px);
+}
+
+.md-typeset .ciab-hero .md-button:not(.md-button--primary) {
+  border-color: var(--md-default-fg-color--lightest);
+  transition: all 0.15s;
+}
+
+.md-typeset .ciab-hero .md-button:not(.md-button--primary):hover {
+  border-color: var(--md-accent-fg-color);
+  color: var(--md-accent-fg-color);
+}
+
+/* ── Feature grid ─────────────────────────────────────────────────── */
+.md-typeset .feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.2rem;
+  margin: 2rem 0;
+}
+
+.md-typeset .feature-card {
+  padding: 1.4rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  transition: all 0.15s;
+}
+
+.md-typeset .feature-card:hover {
+  border-color: var(--md-accent-fg-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .feature-card {
+  background: #111114;
+  border-color: #27272A;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .feature-card:hover {
+  border-color: #5B8CA8;
+  background: #18181B;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.md-typeset .feature-card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: var(--md-primary-fg-color);
+}
+
+.md-typeset .feature-card p {
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+/* ── Sandbox state colors ─────────────────────────────────────────── */
+.md-typeset .state-running { color: #22c55e; }
+.md-typeset .state-paused { color: #eab308; }
+.md-typeset .state-failed { color: #ef4444; }
+.md-typeset .state-stopped { color: #71717a; }
+.md-typeset .state-creating { color: #3b82f6; }
+.md-typeset .state-pending { color: #a78bfa; }
+
+/* ── Install command block ────────────────────────────────────────── */
+.md-typeset .install-cmd {
+  background: #111114;
+  border: 1px solid #27272A;
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  font-family: var(--md-code-font);
+  font-size: 0.9rem;
+  color: #EAEAED;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.md-typeset .install-cmd code {
+  background: none !important;
+  border: none !important;
+  color: #EAEAED !important;
+  padding: 0 !important;
+}
+
+/* ── Mermaid diagram tweaks for dark mode ──────────────────────────── */
+[data-md-color-scheme="slate"] .mermaid {
+  --md-mermaid-font-family: var(--md-text-font);
+  --md-mermaid-edge-color: #3F3F46;
+  --md-mermaid-node-bg-color: #18181B;
+  --md-mermaid-node-fg-color: #EAEAED;
+  --md-mermaid-label-bg-color: #111114;
+  --md-mermaid-label-fg-color: #A1A1AA;
+}

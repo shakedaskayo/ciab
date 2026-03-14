@@ -1,0 +1,35 @@
+[server]
+host = "0.0.0.0"
+port = 3100
+workers = 4
+request_timeout_secs = 300
+cors_origins = ["*"]
+
+[runtime]
+backend = "local"
+
+[agents]
+default_provider = "claude-code"
+
+[agents.providers.claude-code]
+enabled = true
+binary = "claude"
+default_model = "claude-sonnet-4-20250514"
+api_key_env = "ANTHROPIC_API_KEY"
+
+[agents.providers.codex]
+enabled = true
+binary = "codex"
+api_key_env = "OPENAI_API_KEY"
+
+[credentials]
+backend = "sqlite"
+
+[streaming]
+buffer_size = 500
+keepalive_interval_secs = 15
+max_stream_duration_secs = 3600
+
+[logging]
+level = "info"
+format = "json"

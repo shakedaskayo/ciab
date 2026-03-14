@@ -1,0 +1,144 @@
+site_name: CIAB — Claude In A Box
+site_description: Manage coding agent sandboxes with a single API
+site_url: https://shakedzy.github.io/ciab
+repo_url: https://github.com/shakedaskayo/ciab
+repo_name: shakedaskayo/ciab
+edit_uri: edit/main/docs/docs/
+
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  font:
+    text: DM Sans
+    code: IBM Plex Mono
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.instant
+    - navigation.footer
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.action.edit
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/shakedaskayo/ciab
+  generator: false
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.mark
+  - attr_list
+  - md_in_html
+  - tables
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Overview: getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quickstart: getting-started/quickstart.md
+  - Workspaces:
+    - workspaces/index.md
+    - Repositories: workspaces/repositories.md
+    - Skills: workspaces/skills.md
+    - Pre-commands: workspaces/pre-commands.md
+    - Binaries: workspaces/binaries.md
+    - Filesystem: workspaces/filesystem.md
+    - Agent Config: workspaces/agent-config.md
+    - Subagents: workspaces/subagents.md
+    - Credentials: workspaces/credentials.md
+  - Architecture:
+    - Overview: architecture/index.md
+    - Crate Map: architecture/crate-map.md
+    - Provisioning Pipeline: architecture/provisioning-pipeline.md
+    - Streaming: architecture/streaming.md
+    - Sandbox Lifecycle: architecture/sandbox-lifecycle.md
+  - API Reference:
+    - Overview: api-reference/index.md
+    - Sandboxes: api-reference/sandboxes.md
+    - Sessions: api-reference/sessions.md
+    - Execution: api-reference/exec.md
+    - Files: api-reference/files.md
+    - Credentials: api-reference/credentials.md
+    - OAuth: api-reference/oauth.md
+    - Workspaces: api-reference/workspaces.md
+    - Streaming: api-reference/streaming.md
+  - CLI Reference:
+    - Overview: cli-reference/index.md
+    - sandbox: cli-reference/sandbox.md
+    - agent: cli-reference/agent.md
+    - session: cli-reference/session.md
+    - files: cli-reference/files.md
+    - credential: cli-reference/credential.md
+    - oauth: cli-reference/oauth.md
+    - config: cli-reference/config.md
+    - workspace: cli-reference/workspace.md
+    - server: cli-reference/server.md
+  - Configuration:
+    - Config Reference: configuration/index.md
+    - Environment Variables: configuration/environment-variables.md
+  - Agent Providers:
+    - Overview: agent-providers/index.md
+    - Claude Code: agent-providers/claude-code.md
+    - Codex: agent-providers/codex.md
+    - Gemini CLI: agent-providers/gemini.md
+    - Cursor: agent-providers/cursor.md
+    - Custom Provider: agent-providers/custom-provider.md
+  - Deployment:
+    - Overview: deployment/index.md
+    - Docker: deployment/docker.md
+    - OpenSandbox: deployment/opensandbox.md
+    - Production: deployment/production.md
+  - Contributing:
+    - Guide: contributing/index.md

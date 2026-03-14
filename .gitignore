@@ -1,0 +1,35 @@
+# Rust
+/target
+**/*.rs.bk
+
+# SQLite
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Environment & secrets
+.env
+.env.*
+config.toml
+
+# Desktop app
+desktop/dist
+desktop/node_modules
+
+# Docs
+docs/site
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+*.tsbuildinfo
