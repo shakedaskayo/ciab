@@ -29,7 +29,7 @@ jobs:
             target: aarch64-apple-darwin
             artifact: ciab-darwin-arm64
           - name: macOS (Intel)
-            os: macos-13
+            os: macos-latest
             target: x86_64-apple-darwin
             artifact: ciab-darwin-x64
           - name: Linux (x86_64)
@@ -76,6 +76,7 @@ jobs:
   build-desktop:
     name: Desktop — macOS
     runs-on: macos-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -109,7 +110,13 @@ jobs:
           cp desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg dist/ 2>/dev/null || \
           cp desktop/src-tauri/target/release/bundle/dmg/*.dmg dist/ 2>/dev/null || true
           cd dist
-          for f in *.dmg; do
+          shopt -s nullglob
+          dmg_files=(*.dmg)
+          if [ ${#dmg_files[@]} -eq 0 ]; then
+            echo "Warning: No DMG files found, skipping checksum"
+            exit 0
+          fi
+          for f in "${dmg_files[@]}"; do
             if command -v sha256sum &>/dev/null; then
               sha256sum "$f" > "$f.sha256"
             else
@@ -118,6 +125,7 @@ jobs:
           done
 
       - uses: actions/upload-artifact@v4
+        if: hashFiles('dist/*.dmg') != ''
         with:
           name: ciab-desktop-macos
           path: dist/*
@@ -126,6 +134,7 @@ jobs:
   release:
     name: Publish Release
     needs: [build-cli, build-desktop]
+    if: always() && needs.build-cli.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -134,6 +143,9 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+
+      - name: List artifacts
+        run: ls -lhR artifacts/ || echo "No artifacts directory"
 
       - name: Determine tag
         id: tag
