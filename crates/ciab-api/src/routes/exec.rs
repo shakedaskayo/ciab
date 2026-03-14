@@ -42,7 +42,7 @@ pub async fn exec_stream(
             yield Ok::<_, Infallible>(
                 Event::default()
                     .event("stdout")
-                    .data(line.to_string()),
+                    .data(line),
             );
         }
         // Emit stderr lines
@@ -50,7 +50,7 @@ pub async fn exec_stream(
             yield Ok::<_, Infallible>(
                 Event::default()
                     .event("stderr")
-                    .data(line.to_string()),
+                    .data(line),
             );
         }
         // Emit exit code

@@ -119,7 +119,7 @@ impl AgentProvider for ClaudeCodeProvider {
 
         // Legacy: still honour explicit dangerously_skip_permissions if no
         // permission_mode was set (backwards compat).
-        if config.extra.get("permission_mode").is_none()
+        if !config.extra.contains_key("permission_mode")
             && config
                 .extra
                 .get("dangerously_skip_permissions")
@@ -946,7 +946,10 @@ impl AgentProvider for ClaudeCodeProvider {
                 agent_provider: "claude-code".to_string(),
                 llm_provider_kind: LlmProviderKind::OpenRouter,
                 env_var_mapping: [
-                    ("ANTHROPIC_BASE_URL".to_string(), "https://openrouter.ai/api/v1".to_string()),
+                    (
+                        "ANTHROPIC_BASE_URL".to_string(),
+                        "https://openrouter.ai/api/v1".to_string(),
+                    ),
                     ("ANTHROPIC_API_KEY".to_string(), "{api_key}".to_string()),
                 ]
                 .into_iter()

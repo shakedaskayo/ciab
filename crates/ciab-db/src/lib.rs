@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 mod channel_repo;
 mod credential_repo;
 mod gateway_repo;

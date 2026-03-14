@@ -138,7 +138,7 @@ impl TunnelManager for NgrokTunnelManager {
                 if let Some(api_url) = query_ngrok_api().await {
                     api_url
                 } else {
-                    format!("https://pending-ngrok-tunnel.ngrok-free.app")
+                    "https://pending-ngrok-tunnel.ngrok-free.app".to_string()
                 }
             } else {
                 url

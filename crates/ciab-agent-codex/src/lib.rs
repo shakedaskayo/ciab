@@ -342,7 +342,10 @@ impl AgentProvider for CodexProvider {
                 agent_provider: "codex".to_string(),
                 llm_provider_kind: LlmProviderKind::OpenRouter,
                 env_var_mapping: [
-                    ("OPENAI_BASE_URL".to_string(), "https://openrouter.ai/api/v1".to_string()),
+                    (
+                        "OPENAI_BASE_URL".to_string(),
+                        "https://openrouter.ai/api/v1".to_string(),
+                    ),
                     ("OPENAI_API_KEY".to_string(), "{api_key}".to_string()),
                 ]
                 .into_iter()

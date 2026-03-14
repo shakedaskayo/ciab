@@ -21,7 +21,6 @@ pub async fn run_routing_loop(
     while let Some(msg) = rx.recv().await {
         let adapter = adapter.clone();
         let db = db.clone();
-        let channel_id = channel_id;
 
         tokio::spawn(async move {
             if let Err(e) = process_message(&msg, channel_id, adapter.as_ref(), db.as_ref()).await {

@@ -43,8 +43,7 @@ fn stream_event_to_sse(event: &StreamEvent) -> Event {
         .event(
             serde_json::to_string(&event.event_type)
                 .unwrap_or_default()
-                .trim_matches('"')
-                .to_string(),
+                .replace('"', ""),
         )
         .data(serde_json::to_string(event).unwrap_or_default())
 }

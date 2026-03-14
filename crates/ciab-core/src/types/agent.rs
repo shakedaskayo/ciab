@@ -3,10 +3,11 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 /// Permission mode for agent tool execution gating.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PermissionMode {
     /// Auto-approve all tool calls — no confirmation prompts.
+    #[default]
     AutoApprove,
     /// Require approval for edits and commands (Bash, Edit, Write) only.
     ApproveEdits,
@@ -16,12 +17,6 @@ pub enum PermissionMode {
     PlanOnly,
     /// Skip ALL permission checks — CIAB gates + agent native.
     Unrestricted,
-}
-
-impl Default for PermissionMode {
-    fn default() -> Self {
-        Self::AutoApprove
-    }
 }
 
 /// Policy controlling which tool calls require user approval.
@@ -66,7 +61,7 @@ impl PermissionPolicy {
 
         match self.mode {
             PermissionMode::AutoApprove => false,
-            PermissionMode::ApproveEdits => WRITE_TOOLS.iter().any(|&t| t == tool_name),
+            PermissionMode::ApproveEdits => WRITE_TOOLS.contains(&tool_name),
             PermissionMode::ApproveAll => true,
             PermissionMode::PlanOnly => false, // handled by CLI flag, not post-hoc gating
             PermissionMode::Unrestricted => false, // handled above but needed for exhaustive match
@@ -138,11 +133,12 @@ pub struct McpServerConfig {
 }
 
 /// How prompts are delivered to the agent process.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PromptMode {
     /// Send prompt via stdin as NDJSON: `{"type":"user","message":{"role":"user","content":"..."}}`
     /// Used by Claude Code with `--input-format stream-json`.
+    #[default]
     StdinJson,
     /// Append prompt as a positional CLI argument to the command.
     /// Used by Cursor CLI (`cursor agent --print "prompt"`) and Gemini CLI (`gemini "prompt"`).
@@ -151,27 +147,16 @@ pub enum PromptMode {
     StdinPlaintext,
 }
 
-impl Default for PromptMode {
-    fn default() -> Self {
-        Self::StdinJson
-    }
-}
-
 /// Whether the provider supports interactive stdin control protocol
 /// (control_request/control_response for permissions, questions, etc.)
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum InteractiveProtocol {
     /// Full stdin JSON control protocol (Claude Code).
     ControlRequestResponse,
     /// No interactive stdin protocol — agent runs to completion.
+    #[default]
     None,
-}
-
-impl Default for InteractiveProtocol {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

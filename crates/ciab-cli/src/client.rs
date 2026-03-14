@@ -56,6 +56,7 @@ impl CiabClient {
     // Health
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)]
     pub async fn health(&self) -> Result<Value> {
         let resp = self
             .client

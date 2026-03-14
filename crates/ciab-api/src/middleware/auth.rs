@@ -40,14 +40,9 @@ where
 {
     type Rejection = CiabError;
 
-    fn from_request_parts(
-        parts: &mut Parts,
-        state: &S,
-    ) -> impl std::future::Future<Output = Result<Self, Self::Rejection>> + Send {
-        async move {
-            let app_state = AppState::from_ref(state);
-            validate_api_key(parts, &app_state).await
-        }
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let app_state = AppState::from_ref(state);
+        validate_api_key(parts, &app_state).await
     }
 }
 

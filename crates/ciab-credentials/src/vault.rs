@@ -41,7 +41,7 @@ impl CredentialStore {
         if decoded.len() >= 32 {
             // Truncate to 32 bytes
             key.copy_from_slice(&decoded[..32]);
-        } else if decoded.len() > 0 && decoded.len() == hex_str.len() / 2 {
+        } else if !decoded.is_empty() && decoded.len() == hex_str.len() / 2 {
             // Valid hex but shorter than 32 bytes: hash it by XOR-folding
             // Simple approach: repeat the bytes to fill 32 bytes
             for (i, &b) in decoded.iter().cycle().take(32).enumerate() {

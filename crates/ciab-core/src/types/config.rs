@@ -202,21 +202,12 @@ fn default_max_stream_duration() -> u64 {
     3600
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct SecurityConfig {
     #[serde(default)]
     pub api_keys: Vec<String>,
     #[serde(default)]
     pub drop_capabilities: Vec<String>,
-}
-
-impl Default for SecurityConfig {
-    fn default() -> Self {
-        Self {
-            api_keys: Vec::new(),
-            drop_capabilities: Vec::new(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -514,7 +505,7 @@ fn default_routing_mode() -> String {
     "path".to_string()
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct AdvancedGatewayConfig {
     #[serde(default)]
     pub custom_dns_cname: Option<String>,
@@ -522,16 +513,6 @@ pub struct AdvancedGatewayConfig {
     pub k8s_ingress_class: Option<String>,
     #[serde(default)]
     pub k8s_ingress_annotations: HashMap<String, String>,
-}
-
-impl Default for AdvancedGatewayConfig {
-    fn default() -> Self {
-        Self {
-            custom_dns_cname: None,
-            k8s_ingress_class: None,
-            k8s_ingress_annotations: HashMap::new(),
-        }
-    }
 }
 
 // -------------------------------------------------------------------------
@@ -589,16 +570,10 @@ fn default_whatsapp_session_dir() -> String {
     "/tmp/ciab-whatsapp-sessions".to_string()
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct SlackGlobalConfig {
     #[serde(default)]
     pub enabled: bool,
-}
-
-impl Default for SlackGlobalConfig {
-    fn default() -> Self {
-        Self { enabled: false }
-    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

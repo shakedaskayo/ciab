@@ -127,7 +127,9 @@ pub async fn create_llm_provider(
         api_key_credential_id = Some(cred.id);
     }
 
-    let is_local = body.is_local.unwrap_or(body.kind == LlmProviderKind::Ollama);
+    let is_local = body
+        .is_local
+        .unwrap_or(body.kind == LlmProviderKind::Ollama);
     let now = Utc::now();
     let provider = LlmProvider {
         id: Uuid::new_v4(),
@@ -323,9 +325,7 @@ pub async fn detect_providers(
     if let Some(client) = OllamaClient::detect().await {
         let version = client.version().await.ok();
         let existing = state.db.list_llm_providers().await?;
-        let already_registered = existing
-            .iter()
-            .any(|p| p.kind == LlmProviderKind::Ollama);
+        let already_registered = existing.iter().any(|p| p.kind == LlmProviderKind::Ollama);
 
         detected.push(DetectedProvider {
             kind: LlmProviderKind::Ollama,
@@ -378,9 +378,7 @@ pub async fn ollama_pull(
 // compatibility
 // ---------------------------------------------------------------------------
 
-pub async fn compatibility(
-    State(state): State<AppState>,
-) -> Result<impl IntoResponse, CiabError> {
+pub async fn compatibility(State(state): State<AppState>) -> Result<impl IntoResponse, CiabError> {
     let mut entries = Vec::new();
 
     for agent in state.agents.values() {
@@ -445,12 +443,10 @@ async fn fetch_models_for_provider(
                 Err(_) => Ok(hardcoded_openai_models(provider.id)),
             }
         }
-        LlmProviderKind::OpenRouter => {
-            match fetch_openrouter_models(provider).await {
-                Ok(models) => Ok(models),
-                Err(_) => Ok(vec![]),
-            }
-        }
+        LlmProviderKind::OpenRouter => match fetch_openrouter_models(provider).await {
+            Ok(models) => Ok(models),
+            Err(_) => Ok(vec![]),
+        },
         LlmProviderKind::Custom => Ok(vec![]),
     }
 }
@@ -525,9 +521,7 @@ async fn fetch_openrouter_models(provider: &LlmProvider) -> Result<Vec<LlmModel>
                 .and_then(|n| n.as_str())
                 .unwrap_or(&id)
                 .to_string();
-            let context_length = m
-                .get("context_length")
-                .and_then(|c| c.as_u64());
+            let context_length = m.get("context_length").and_then(|c| c.as_u64());
 
             Some(LlmModel {
                 id: id.clone(),

@@ -19,6 +19,6 @@ pub async fn get_slash_commands(
     let agent = state
         .agents
         .get(&provider)
-        .ok_or_else(|| CiabError::AgentProviderNotFound(provider))?;
+        .ok_or(CiabError::AgentProviderNotFound(provider))?;
     Ok(Json(agent.slash_commands()))
 }

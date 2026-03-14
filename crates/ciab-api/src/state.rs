@@ -39,18 +39,10 @@ pub struct QueuedMessage {
 
 /// Per-session message queue. Messages are processed FIFO.
 /// The `processing` flag indicates if an agent is currently running for this session.
+#[derive(Default)]
 pub struct SessionQueue {
     pub messages: std::collections::VecDeque<QueuedMessage>,
     pub processing: bool,
-}
-
-impl Default for SessionQueue {
-    fn default() -> Self {
-        Self {
-            messages: std::collections::VecDeque::new(),
-            processing: false,
-        }
-    }
 }
 
 #[derive(Clone)]

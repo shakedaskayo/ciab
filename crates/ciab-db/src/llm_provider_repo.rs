@@ -188,7 +188,18 @@ impl Database {
         .map_err(|e| CiabError::Database(e.to_string()))?;
 
         let mut results = Vec::new();
-        for (id, provider_id, name, context_window, supports_tools, supports_vision, is_local, size_bytes, family) in rows {
+        for (
+            id,
+            provider_id,
+            name,
+            context_window,
+            supports_tools,
+            supports_vision,
+            is_local,
+            size_bytes,
+            family,
+        ) in rows
+        {
             results.push(LlmModel {
                 id,
                 name,
@@ -236,7 +247,20 @@ fn parse_llm_provider_row(
         String,
     ),
 ) -> CiabResult<LlmProvider> {
-    let (id, name, kind, enabled, base_url, api_key_credential_id, default_model, is_local, auto_detected, extra_json, created_at, updated_at) = row;
+    let (
+        id,
+        name,
+        kind,
+        enabled,
+        base_url,
+        api_key_credential_id,
+        default_model,
+        is_local,
+        auto_detected,
+        extra_json,
+        created_at,
+        updated_at,
+    ) = row;
 
     Ok(LlmProvider {
         id: id
@@ -245,7 +269,7 @@ fn parse_llm_provider_row(
         name,
         kind: kind
             .parse::<LlmProviderKind>()
-            .map_err(|e| CiabError::Database(e))?,
+            .map_err(CiabError::Database)?,
         enabled,
         base_url,
         api_key_credential_id: api_key_credential_id

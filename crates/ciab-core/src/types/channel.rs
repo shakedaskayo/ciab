@@ -24,21 +24,16 @@ impl std::fmt::Display for ChannelProvider {
 }
 
 /// Channel lifecycle state
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ChannelState {
+    #[default]
     Inactive,
     Pairing,
     Connected,
     Reconnecting,
     Failed,
     Stopped,
-}
-
-impl Default for ChannelState {
-    fn default() -> Self {
-        Self::Inactive
-    }
 }
 
 /// How a channel resolves its target sandbox

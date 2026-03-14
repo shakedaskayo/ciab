@@ -99,7 +99,7 @@ impl Database {
                 let matches = filters
                     .labels
                     .iter()
-                    .all(|(k, v)| info.labels.get(k).map_or(false, |lv| lv == v));
+                    .all(|(k, v)| info.labels.get(k).is_some_and(|lv| lv == v));
                 if !matches {
                     continue;
                 }

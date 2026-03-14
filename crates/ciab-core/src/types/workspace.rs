@@ -141,7 +141,7 @@ pub struct Workspace {
 }
 
 /// The full specification of a workspace - this is what gets serialized to TOML.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct WorkspaceSpec {
     /// Human-readable name
     #[serde(default)]
@@ -244,34 +244,6 @@ pub struct WorkspaceSpec {
     /// Per-workspace runtime backend selection
     #[serde(default)]
     pub runtime: Option<WorkspaceRuntimeConfig>,
-}
-
-impl Default for WorkspaceSpec {
-    fn default() -> Self {
-        Self {
-            name: None,
-            description: None,
-            repositories: Vec::new(),
-            skills: Vec::new(),
-            pre_commands: Vec::new(),
-            binaries: Vec::new(),
-            filesystem: FilesystemConfig::default(),
-            agent: None,
-            subagents: Vec::new(),
-            credentials: Vec::new(),
-            env_vars: HashMap::new(),
-            resource_limits: None,
-            network: None,
-            volumes: Vec::new(),
-            ports: Vec::new(),
-            local_mounts: Vec::new(),
-            env_file: None,
-            labels: HashMap::new(),
-            timeout_secs: None,
-            image: None,
-            runtime: None,
-        }
-    }
 }
 
 /// A repository associated with the workspace

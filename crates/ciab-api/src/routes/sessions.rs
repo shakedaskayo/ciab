@@ -479,6 +479,7 @@ async fn process_queued_message(
 
 /// Background agent execution — processes agent output, handles permissions,
 /// and persists the assistant message when done.
+#[allow(clippy::too_many_arguments)]
 async fn run_agent_background(
     state: AppState,
     runtime: std::sync::Arc<dyn ciab_core::traits::runtime::SandboxRuntime>,
@@ -612,30 +613,28 @@ async fn run_agent_background(
                             {
                                 // Find the last ToolUse in assistant_content and try to update its input
                                 // once we have a complete JSON string.
-                                if let Some(last_tool) = assistant_content
-                                    .iter_mut()
-                                    .rev()
-                                    .find(|c| matches!(c, MessageContent::ToolUse { .. }))
+                                if let Some(MessageContent::ToolUse { ref mut input, .. }) =
+                                    assistant_content
+                                        .iter_mut()
+                                        .rev()
+                                        .find(|c| matches!(c, MessageContent::ToolUse { .. }))
                                 {
-                                    if let MessageContent::ToolUse { ref mut input, .. } = last_tool
+                                    // Append to a running string buffer
+                                    let current = if let Some(buf) =
+                                        input.get("__partial_buf").and_then(|v| v.as_str())
                                     {
-                                        // Append to a running string buffer
-                                        let current = if let Some(buf) =
-                                            input.get("__partial_buf").and_then(|v| v.as_str())
-                                        {
-                                            format!("{}{}", buf, partial)
-                                        } else {
-                                            partial.to_string()
-                                        };
-                                        // Try to parse the accumulated JSON
-                                        if let Ok(parsed) =
-                                            serde_json::from_str::<serde_json::Value>(&current)
-                                        {
-                                            *input = parsed;
-                                        } else {
-                                            // Store partial buffer for next delta
-                                            *input = json!({"__partial_buf": current});
-                                        }
+                                        format!("{}{}", buf, partial)
+                                    } else {
+                                        partial.to_string()
+                                    };
+                                    // Try to parse the accumulated JSON
+                                    if let Ok(parsed) =
+                                        serde_json::from_str::<serde_json::Value>(&current)
+                                    {
+                                        *input = parsed;
+                                    } else {
+                                        // Store partial buffer for next delta
+                                        *input = json!({"__partial_buf": current});
                                     }
                                 }
                             }

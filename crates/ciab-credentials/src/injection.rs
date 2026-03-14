@@ -33,11 +33,7 @@ impl CredentialInjector {
                     let value = String::from_utf8(plaintext)
                         .map_err(|e| CiabError::Internal(format!("invalid utf8: {e}")))?;
                     // Use the credential name as the env var key (uppercased)
-                    let env_key = cred_set
-                        .name
-                        .to_uppercase()
-                        .replace('-', "_")
-                        .replace(' ', "_");
+                    let env_key = cred_set.name.to_uppercase().replace(['-', ' '], "_");
                     env_vars.insert(env_key, value);
                 }
                 CredentialType::EnvVars => {
@@ -54,11 +50,7 @@ impl CredentialInjector {
                         serde_json::from_slice(&plaintext)?;
                     let env_key = format!(
                         "{}_ACCESS_TOKEN",
-                        cred_set
-                            .name
-                            .to_uppercase()
-                            .replace('-', "_")
-                            .replace(' ', "_")
+                        cred_set.name.to_uppercase().replace(['-', ' '], "_")
                     );
                     env_vars.insert(env_key, token.access_token);
                 }

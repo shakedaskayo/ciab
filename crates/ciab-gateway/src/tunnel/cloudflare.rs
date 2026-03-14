@@ -126,7 +126,7 @@ impl TunnelManager for CloudflareTunnelManager {
             }
 
             if url.is_empty() {
-                format!("https://pending-cloudflare-tunnel.trycloudflare.com")
+                "https://pending-cloudflare-tunnel.trycloudflare.com".to_string()
             } else {
                 url
             }

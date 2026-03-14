@@ -107,7 +107,7 @@ impl TunnelManager for BoreTunnelManager {
                             }
                         }
                         if line.contains("remote_port:") || line.contains("remote port:") {
-                            if let Some(port_str) = line.split(':').last() {
+                            if let Some(port_str) = line.split(':').next_back() {
                                 if let Ok(remote_port) = port_str.trim().parse::<u16>() {
                                     url = format!("http://{}:{}", self.config.server, remote_port);
                                     break;

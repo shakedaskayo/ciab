@@ -7,7 +7,7 @@ use std::sync::Arc;
 use chrono::Utc;
 use ciab_core::error::{CiabError, CiabResult};
 use ciab_core::traits::channel::ChannelAdapter;
-use ciab_core::types::channel::{Channel, ChannelFilters, ChannelState};
+use ciab_core::types::channel::{ChannelFilters, ChannelState};
 use ciab_db::Database;
 use dashmap::DashMap;
 use tokio::sync::RwLock;
@@ -28,7 +28,7 @@ pub struct SenderSession {
 struct RunningChannel {
     adapter: Arc<dyn ChannelAdapter>,
     routing_task: JoinHandle<()>,
-    sender_sessions: Arc<DashMap<String, SenderSession>>,
+    _sender_sessions: Arc<DashMap<String, SenderSession>>,
 }
 
 /// Manages the lifecycle of all channels.
@@ -93,7 +93,7 @@ impl ChannelManager {
             RunningChannel {
                 adapter,
                 routing_task,
-                sender_sessions,
+                _sender_sessions: sender_sessions,
             },
         );
 

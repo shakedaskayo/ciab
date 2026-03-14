@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
 
 use ciab_core::error::{CiabError, CiabResult};
@@ -75,7 +75,7 @@ pub async fn cargo_install(crate_name: &str) -> CiabResult<PathBuf> {
 }
 
 /// Download a binary from a URL using curl or platform-appropriate method.
-async fn download_file(url: &str, dest: &PathBuf) -> CiabResult<()> {
+async fn download_file(url: &str, dest: &Path) -> CiabResult<()> {
     let output = tokio::process::Command::new("curl")
         .args(["-fsSL", "-o"])
         .arg(dest.as_os_str())

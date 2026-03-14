@@ -216,7 +216,7 @@ pub async fn execute(command: ServerCommand) -> Result<()> {
                 agents,
                 runtimes,
                 credentials: credential_store,
-                stream_handler: stream_handler,
+                stream_handler,
                 provisioning,
                 db,
                 config: app_config,
