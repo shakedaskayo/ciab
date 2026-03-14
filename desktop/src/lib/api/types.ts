@@ -253,7 +253,7 @@ export interface Message {
 export type MessageContent =
   | { type: "text"; text: string }
   | { type: "thinking"; thinking: string }
-  | { type: "tool_use"; id: string; name: string; input: unknown }
+  | { type: "tool_use"; id: string; name: string; input: unknown; agent_name?: string }
   | {
       type: "tool_result";
       tool_use_id: string;

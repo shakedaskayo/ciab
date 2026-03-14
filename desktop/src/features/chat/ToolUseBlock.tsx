@@ -22,6 +22,7 @@ interface Props {
   toolId?: string;
   isExecuting?: boolean;
   permissionStatus?: "approved" | "denied";
+  agentName?: string;
 }
 
 const TOOL_ICONS: Record<string, typeof Terminal> = {
@@ -54,7 +55,7 @@ const TOOL_COLORS_MAP: Record<string, string> = {
 
 const DEFAULT_COLOR = "text-ciab-steel-blue bg-ciab-steel-blue/10 border-ciab-steel-blue/20";
 
-export default function ToolUseBlock({ name, input, toolId, isExecuting, permissionStatus }: Props) {
+export default function ToolUseBlock({ name, input, toolId, isExecuting, permissionStatus, agentName }: Props) {
   const [expanded, setExpanded] = useState(name === "TodoWrite");
   const [copied, setCopied] = useState(false);
   const Icon = TOOL_ICONS[name] ?? Terminal;
@@ -94,6 +95,13 @@ export default function ToolUseBlock({ name, input, toolId, isExecuting, permiss
         <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${colorClass.split(" ")[1]}`}>
           <Icon className={`w-3 h-3 ${colorClass.split(" ")[0]}`} />
         </div>
+
+        {/* Agent name (for subagent tool calls) */}
+        {agentName && (
+          <span className="text-[9px] font-mono text-violet-400/70 bg-violet-400/10 px-1.5 py-0.5 rounded-full flex-shrink-0">
+            {agentName}
+          </span>
+        )}
 
         {/* Tool name */}
         <span className={`text-xs font-mono font-semibold ${colorClass.split(" ")[0]}`}>

@@ -53,6 +53,8 @@ pub enum MessageContent {
         id: String,
         name: String,
         input: serde_json::Value,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        agent_name: Option<String>,
     },
     ToolResult {
         tool_use_id: String,

@@ -97,6 +97,11 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
   const [liveTodos, setLiveTodos] = useState<Array<{ id: string; content: string; status: "pending" | "in_progress" | "completed"; priority?: "high" | "medium" | "low" }>>([]);
   const [streamingToolInput, setStreamingToolInput] = useState("");
   const activeToolRef = useRef<string | null>(null);
+  const [completedToolCalls, setCompletedToolCalls] = useState<
+    Array<{ id: string; name: string; input: unknown; agentName?: string }>
+  >([]);
+  const activeSubagentRef = useRef<string | null>(null);
+  const activeToolMetaRef = useRef<{ id: string; agentName: string | null } | null>(null);
   const [showActivityPanel, setShowActivityPanel] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
@@ -235,7 +240,7 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
           break;
         }
         case "tool_use_start": {
-          const data = event.data as { name?: string; input?: Record<string, unknown>; streaming?: boolean };
+          const data = event.data as { id?: string; name?: string; input?: Record<string, unknown>; streaming?: boolean };
           const toolName = data.name ?? "tool";
           setActiveTool(toolName);
           activeToolRef.current = toolName;
@@ -244,6 +249,8 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
           setOptimisticMsg(null);
           // Reset streaming tool input for the new tool
           setStreamingToolInput("");
+          // Store current tool metadata for accumulation on completion
+          activeToolMetaRef.current = { id: data.id ?? event.id, agentName: activeSubagentRef.current };
 
           // Track TodoWrite updates in real-time (from complete input)
           if (data.name === "TodoWrite" && data.input && !data.streaming) {
@@ -297,20 +304,48 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
           break;
         }
         case "tool_use_complete":
-        case "tool_result":
+        case "tool_result": {
+          // Accumulate the completed tool call so it persists in the streaming UI
+          const toolName = activeToolRef.current;
+          const meta = activeToolMetaRef.current;
+          if (toolName && meta) {
+            // Try to parse the final input
+            setStreamingToolInput((prevInput) => {
+              let parsedInput: unknown = {};
+              if (prevInput) {
+                try { parsedInput = JSON.parse(prevInput); } catch { parsedInput = {}; }
+              }
+              setCompletedToolCalls((prev) => [
+                ...prev,
+                {
+                  id: meta.id,
+                  name: toolName,
+                  input: parsedInput,
+                  agentName: meta.agentName ?? undefined,
+                },
+              ]);
+              return "";
+            });
+          } else {
+            setStreamingToolInput("");
+          }
           setActiveTool(null);
           activeToolRef.current = null;
-          setStreamingToolInput("");
+          activeToolMetaRef.current = null;
           break;
+        }
         case "subagent_start": {
           const data = event.data as { name?: string };
-          setActiveSubagent(data.name ?? "subagent");
+          const subName = data.name ?? "subagent";
+          setActiveSubagent(subName);
+          activeSubagentRef.current = subName;
           setIsProcessing(true);
           setOptimisticMsg(null);
           break;
         }
         case "subagent_end":
           setActiveSubagent(null);
+          activeSubagentRef.current = null;
           break;
         case "permission_request": {
           const data = event.data as PermissionRequestData;
@@ -411,6 +446,7 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
             setToolProgressText(null);
             setResultError(null);
             setLiveTodos([]);
+            setCompletedToolCalls([]);
           };
           // Retry refetch with a short delay to ensure DB persistence
           const tryRefetch = (attempts: number) => {
@@ -566,6 +602,9 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
     setFileActivities([]);
     setLiveTodos([]);
     setStreamingToolInput("");
+    setCompletedToolCalls([]);
+    activeSubagentRef.current = null;
+    activeToolMetaRef.current = null;
   }, []);
 
   const handleNewSession = useCallback(() => {
@@ -777,16 +816,45 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
             <TodoListBlock todos={liveTodos} isLive={isProcessing} />
           )}
 
+          {/* Completed tool calls from this streaming turn */}
+          {completedToolCalls.length > 0 && (
+            <div className="flex gap-2 sm:gap-3 animate-fade-in">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-ciab-copper/10 ring-1 ring-ciab-copper/20 flex items-center justify-center flex-shrink-0 mt-1">
+                <AgentProviderIcon provider="claude-code" size={14} />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <span className="text-[10px] font-mono font-medium tracking-wide text-ciab-copper/60">
+                  AGENT
+                </span>
+                {completedToolCalls.map((tc) => (
+                  <div key={tc.id}>
+                    {tc.agentName && (
+                      <span className="text-[9px] font-mono text-violet-400/70 mb-0.5 block">
+                        ↳ {tc.agentName}
+                      </span>
+                    )}
+                    <ToolUseBlock name={tc.name} input={tc.input} toolId={tc.id} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Streaming text with markdown */}
           {streamingText && <StreamingMessage text={streamingText} thinkingText={thinkingText} />}
 
           {/* Live tool call — show the actual ToolUseBlock with streaming input */}
-          {isProcessing && activeTool && !streamingText && (
+          {isProcessing && activeTool && (
             <div className="flex gap-2 sm:gap-3 animate-fade-in">
               <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-ciab-copper/10 ring-1 ring-ciab-copper/20 flex items-center justify-center flex-shrink-0 mt-1">
                 <AgentProviderIcon provider="claude-code" size={14} />
               </div>
               <div className="flex-1 min-w-0">
+                {activeSubagent && (
+                  <span className="text-[9px] font-mono text-violet-400/70 mb-0.5 block">
+                    ↳ {activeSubagent}
+                  </span>
+                )}
                 <span className="text-[10px] font-mono font-medium tracking-wide text-ciab-copper/60">
                   AGENT
                 </span>
@@ -877,7 +945,7 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
       </div>{/* end chat column */}
 
       {/* Activity panel — right side */}
-      {showActivityPanel && fileActivities.length > 0 && (
+      {showActivityPanel && (
         <div className="w-64 xl:w-72 flex-shrink-0 border-l border-ciab-border bg-ciab-bg-secondary/30 hidden md:block">
           <ActivityPanel
             activities={fileActivities}

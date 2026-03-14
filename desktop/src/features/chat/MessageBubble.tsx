@@ -184,7 +184,7 @@ function ContentBlock({
 
     case "tool_use":
       return (
-        <ToolUseBlock name={content.name} input={content.input} toolId={content.id} />
+        <ToolUseBlock name={content.name} input={content.input} toolId={content.id} agentName={content.agent_name} />
       );
 
     case "tool_result":

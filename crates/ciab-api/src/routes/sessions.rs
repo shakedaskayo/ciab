@@ -501,6 +501,7 @@ async fn run_agent_background(
     let mut interrupted_by_denial = false;
     let mut captured_claude_session_id: Option<String> = None;
     let mut deferred_completion_event: Option<StreamEvent> = None;
+    let mut current_subagent_name: Option<String> = None;
 
     match runtime
         .exec_streaming_interactive(&sandbox_id, &exec_req)
@@ -603,6 +604,7 @@ async fn run_agent_background(
                                     id: id.to_string(),
                                     name: name.to_string(),
                                     input,
+                                    agent_name: current_subagent_name.clone(),
                                 });
                             }
                         }
@@ -829,6 +831,16 @@ async fn run_agent_background(
                                     is_error,
                                 });
                             }
+                        }
+                        StreamEventType::SubagentStart => {
+                            current_subagent_name = event
+                                .data
+                                .get("name")
+                                .and_then(|v| v.as_str())
+                                .map(|s| s.to_string());
+                        }
+                        StreamEventType::SubagentEnd => {
+                            current_subagent_name = None;
                         }
                         _ => {}
                     }
