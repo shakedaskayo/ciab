@@ -2,18 +2,26 @@
 
 Create your first coding agent sandbox in 5 minutes.
 
-## 1. Start the Server
+## 1. Install
 
 ```bash
-ciab server start --config config.toml --port 8080
+curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh | bash
 ```
 
-The API is now available at `http://localhost:8080`.
+See [Installation](installation.md) for more options.
+
+## 2. Start the Server
+
+```bash
+ciab server start --config config.toml
+```
+
+The API is now available at `http://localhost:9090` (default port).
 
 !!! tip "Health Check"
-    Verify the server is running: `curl http://localhost:8080/health`
+    Verify the server is running: `curl http://localhost:9090/health`
 
-## 2. Create a Sandbox
+## 3. Create a Sandbox
 
 ```bash
 ciab sandbox create \
@@ -25,13 +33,12 @@ ciab sandbox create \
 This will:
 
 1. Validate the sandbox specification
-2. Pull the Claude Code container image
-3. Resolve and inject credentials
-4. Start the sandbox and the agent process
+2. Resolve and inject credentials
+3. Start the agent process (local by default, or in a container with Docker/OpenSandbox)
 
 You'll see provisioning progress streamed to your terminal.
 
-## 3. Chat with the Agent
+## 4. Chat with the Agent
 
 ```bash
 # Single message
@@ -43,7 +50,7 @@ ciab agent chat --sandbox-id <id> --interactive --stream
 
 The `--stream` flag shows the agent's response as it's generated, including tool use.
 
-## 4. Execute Commands
+## 5. Execute Commands
 
 ```bash
 # Run a command in the sandbox
@@ -53,7 +60,7 @@ ciab sandbox exec <id> -- ls -la /workspace
 ciab sandbox exec <id> -- node --version
 ```
 
-## 5. Browse Files
+## 6. Browse Files
 
 ```bash
 # List files
@@ -66,7 +73,7 @@ ciab files download <id> --path /workspace/README.md --output ./README.md
 ciab files upload <id> --path /workspace/data.json --input ./data.json
 ```
 
-## 6. Monitor Resources
+## 7. Monitor Resources
 
 ```bash
 ciab sandbox stats <id>
@@ -74,7 +81,7 @@ ciab sandbox stats <id>
 
 Output shows CPU usage, memory, disk, and network statistics.
 
-## 7. Clean Up
+## 8. Clean Up
 
 ```bash
 # Stop the sandbox
@@ -90,7 +97,7 @@ All CLI operations are available via the REST API:
 
 ```bash
 # Create a sandbox
-curl -X POST http://localhost:8080/api/v1/sandboxes \
+curl -X POST http://localhost:9090/api/v1/sandboxes \
   -H "Content-Type: application/json" \
   -d '{
     "agent_provider": "claude-code",
@@ -101,12 +108,12 @@ curl -X POST http://localhost:8080/api/v1/sandboxes \
   }'
 
 # Send a message
-curl -X POST http://localhost:8080/api/v1/sessions/<sid>/messages \
+curl -X POST http://localhost:9090/api/v1/sessions/<sid>/messages \
   -H "Content-Type: application/json" \
   -d '{"role": "user", "content": [{"type": "text", "text": "Hello!"}]}'
 
 # Stream events (SSE)
-curl -N http://localhost:8080/api/v1/sandboxes/<id>/stream
+curl -N http://localhost:9090/api/v1/sandboxes/<id>/stream
 ```
 
 ## Next Steps
