@@ -124,8 +124,17 @@ jobs:
             fi
           done
 
+      - name: Check for DMG files
+        id: dmg-check
+        run: |
+          if ls dist/*.dmg 1>/dev/null 2>&1; then
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
       - uses: actions/upload-artifact@v4
-        if: hashFiles('dist/*.dmg') != ''
+        if: steps.dmg-check.outputs.found == 'true'
         with:
           name: ciab-desktop-macos
           path: dist/*

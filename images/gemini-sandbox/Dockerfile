@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git curl ca-certificates openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g @anthropic-ai/gemini-cli
+RUN npm install -g @google/gemini-cli@latest
 
 RUN useradd -m -s /bin/bash agent
 USER agent

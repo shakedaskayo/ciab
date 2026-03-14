@@ -69,13 +69,20 @@ resolve_version() {
   fi
 
   local latest
-  latest=$(curl_auth -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+  # Try /releases/latest first (skips pre-releases)
+  latest=$(curl_auth -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null \
     | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+
+  # Fall back to most recent release (including pre-releases)
+  if [ -z "$latest" ]; then
+    latest=$(curl_auth -fsSL "https://api.github.com/repos/${REPO}/releases" 2>/dev/null \
+      | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+  fi
 
   if [ -z "$latest" ]; then
     echo "Error: Could not determine latest version." >&2
-    echo "  - For private repos, set GITHUB_TOKEN" >&2
-    echo "  - Or specify a version with --version" >&2
+    echo "  Specify a version with --version, e.g.:" >&2
+    echo "    install.sh --version v0.1.0" >&2
     exit 1
   fi
 

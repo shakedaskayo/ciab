@@ -225,6 +225,7 @@ curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh |
 | macOS (Intel) | [`ciab-darwin-x64.tar.gz`](https://github.com/shakedaskayo/ciab/releases/latest) |
 | Linux (x86_64) | [`ciab-linux-x64.tar.gz`](https://github.com/shakedaskayo/ciab/releases/latest) |
 | Linux (ARM64) | [`ciab-linux-arm64.tar.gz`](https://github.com/shakedaskayo/ciab/releases/latest) |
+| Desktop (macOS) | [`CIAB.dmg`](https://github.com/shakedaskayo/ciab/releases/latest) |
 
 **From source:**
 
