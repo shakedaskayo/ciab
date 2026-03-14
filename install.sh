@@ -1,14 +1,9 @@
 #!/usr/bin/env bash
 # CIAB installer — https://github.com/shakedaskayo/ciab
 #
-# Usage (public repo):
+# Usage:
 #   curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh | bash
 #   curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh | bash -s -- --version v0.1.0
-#
-# Usage (private repo — set GITHUB_TOKEN first):
-#   export GITHUB_TOKEN=ghp_...
-#   curl -fsSL -H "Authorization: token $GITHUB_TOKEN" \
-#     https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh | bash
 
 set -euo pipefail
 
@@ -132,8 +127,12 @@ verify_checksum() {
 }
 
 # ── Main ──────────────────────────────────────────────────────────────
+TMP_DIR=""
+cleanup() { rm -rf "${TMP_DIR:-}"; }
+trap cleanup EXIT
+
 main() {
-  local platform version artifact_name download_url tmp_dir
+  local platform version artifact_name download_url
 
   platform=$(detect_platform)
   version=$(resolve_version)
@@ -145,11 +144,10 @@ main() {
   echo "  To:   ${INSTALL_DIR}/ciab"
   echo ""
 
-  tmp_dir=$(mktemp -d)
-  trap 'rm -rf "$tmp_dir"' EXIT
+  TMP_DIR=$(mktemp -d)
 
   # Download
-  if ! download_asset "$download_url" "${tmp_dir}/${artifact_name}"; then
+  if ! download_asset "$download_url" "${TMP_DIR}/${artifact_name}"; then
     echo ""
     echo "Error: Failed to download ${download_url}"
     echo "Check that the version '${version}' exists at:"
@@ -164,15 +162,15 @@ main() {
 
   # Verify checksum if available
   local sha_url="${download_url}.sha256"
-  if curl_auth -fsSL "$sha_url" -o "${tmp_dir}/checksum.sha256" 2>/dev/null; then
-    verify_checksum "${tmp_dir}/${artifact_name}" "${tmp_dir}/checksum.sha256"
+  if curl_auth -fsSL "$sha_url" -o "${TMP_DIR}/checksum.sha256" 2>/dev/null; then
+    verify_checksum "${TMP_DIR}/${artifact_name}" "${TMP_DIR}/checksum.sha256"
   fi
 
   # Extract
-  tar xzf "${tmp_dir}/${artifact_name}" -C "$tmp_dir"
+  tar xzf "${TMP_DIR}/${artifact_name}" -C "$TMP_DIR"
 
   # Verify extracted binary runs
-  if ! "${tmp_dir}/ciab" --version &>/dev/null; then
+  if ! "${TMP_DIR}/ciab" --version &>/dev/null; then
     echo "Error: Extracted binary failed to run. Wrong platform?" >&2
     exit 1
   fi
@@ -180,10 +178,10 @@ main() {
   # Install
   mkdir -p "$INSTALL_DIR" 2>/dev/null || true
   if [ -w "$INSTALL_DIR" ]; then
-    mv "${tmp_dir}/ciab" "${INSTALL_DIR}/ciab"
+    mv "${TMP_DIR}/ciab" "${INSTALL_DIR}/ciab"
   else
     echo "Need sudo to install to ${INSTALL_DIR}"
-    sudo mv "${tmp_dir}/ciab" "${INSTALL_DIR}/ciab"
+    sudo mv "${TMP_DIR}/ciab" "${INSTALL_DIR}/ciab"
   fi
 
   chmod +x "${INSTALL_DIR}/ciab"
