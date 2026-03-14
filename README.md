@@ -15,9 +15,9 @@
 
 <br>
 
-CIAB (**Claude-In-A-Box**) is an open-source control plane for coding agents. Spin up **Claude Code**, **Codex**, **Gemini CLI**, or **Cursor** in isolated sandboxes — as local processes or containers — and manage them all through a unified REST API, CLI, or desktop app.
+CIAB (**Claude-In-A-Box**) is an open-source control plane for coding agents. Spin up **Claude Code**, **Codex**, **Gemini CLI**, or **Cursor** in isolated sandboxes — as local processes or containers — and manage them through a unified **REST API**, **CLI**, **desktop app**, or **any web browser**.
 
-Each sandbox gets its own workspace, credentials, repos, and streaming output. You control everything from one place.
+Every sandbox gets its own workspace, credentials, repos, and real-time streaming output. Access them from your laptop, phone, tablet, or CI pipeline — from the same network or anywhere in the world via built-in tunneling.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh | bash
@@ -25,42 +25,53 @@ curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh |
 
 <br>
 
-## Live Streaming Chat
+## Dashboard
 
-Chat with coding agents in real time — watch text stream in, tool calls execute, and results appear as they happen. Full SSE streaming from agent to browser.
+Manage all your sandboxes from a single view. Quick-launch any agent provider, monitor running/paused/failed states, and create new sandboxes in seconds.
 
 <p align="center">
-  <img src="docs/docs/assets/screenshots/ciab-live-chat-streaming.gif" alt="CIAB Live Streaming Chat" width="100%">
+  <img src="docs/docs/assets/screenshots/dashboard.png" alt="CIAB Dashboard" width="100%">
 </p>
 
 <br>
 
-## Desktop App
+## Chat with Agents — Real-time Streaming
 
-Visual management for all your sandboxes, workspaces, skills, credentials, and gateway tunnels.
+Full conversation interface with live SSE streaming. Watch tool calls execute, file system results appear, and code stream in — all in real time. Permission modes (Auto, Safe, Strict, Plan) control what the agent can do.
 
 <p align="center">
-  <img src="docs/docs/assets/screenshots/ciab-app-tour.gif" alt="CIAB Desktop App Tour" width="100%">
+  <img src="docs/docs/assets/screenshots/chat.png" alt="CIAB Chat with Streaming" width="100%">
 </p>
 
 <br>
 
-## Mobile Access — Chat From Anywhere
+## Access From Anywhere — Phone, Tablet, Any Browser
 
-CIAB's built-in gateway lets you access your sandboxes from **any device** — iPhone, iPad, Android, or any browser. Scan the QR code from the Gateway page to open the web UI on your phone. Full streaming chat works on mobile with the same real-time experience.
+CIAB's built-in **web gateway** makes every sandbox accessible from **any device**. Open the Gateway page, scan the QR code with your iPhone or iPad, and you're chatting with your agent from your phone — with full streaming support. No app install needed.
 
 <p align="center">
-  <img src="docs/docs/assets/screenshots/ciab-gateway-qr-mobile.gif" alt="CIAB Gateway QR Code for Mobile Access" width="100%">
+  <img src="docs/docs/assets/screenshots/gateway.png" alt="CIAB Gateway — Mobile Access" width="100%">
 </p>
 
-**How it works:**
+**Three ways to access your sandboxes remotely:**
 
-1. Start the CIAB server on your machine
-2. Open the **Gateway** page in the desktop app
-3. Scan the **QR code** with your phone (same WiFi network)
-4. Chat with your agents from your phone with full streaming support
+| Method | How | Use case |
+|--------|-----|----------|
+| **LAN / mDNS** | Open `http://ciab.local.local:9090` or scan QR code | Same WiFi — phone, tablet, another laptop |
+| **Tunnel** (bore, Cloudflare, ngrok, frp) | One config line, auto-installs | Access from anywhere in the world |
+| **REST API** | `curl`, scripts, CI/CD pipelines | Programmatic access, automation |
 
-For remote access outside your network, enable a tunnel (bore, Cloudflare, ngrok, or frp) to get a public URL — accessible from anywhere in the world.
+Every access method gets the same full experience: real-time streaming chat, tool use visualization, file browsing, terminal access, and session management.
+
+<br>
+
+## Skills Catalog
+
+Browse and install agent skills from the [skills.sh](https://skills.sh) open registry. Add skills to workspaces to give agents specialized knowledge — React best practices, security guidelines, API patterns, and more.
+
+<p align="center">
+  <img src="docs/docs/assets/screenshots/skills.png" alt="CIAB Skills Catalog" width="100%">
+</p>
 
 <br>
 
@@ -70,7 +81,7 @@ For remote access outside your network, enable a tunnel (bore, Cloudflare, ngrok
   <img src="docs/docs/assets/architecture.svg" alt="CIAB Architecture" width="100%">
 </p>
 
-**Clients** (CLI, REST API, desktop app, mobile, Slack/WhatsApp) connect to the **CIAB control plane** — an Axum-based gateway that handles auth, streaming, and orchestration. The control plane provisions sandboxes through a **9-step pipeline** (validate → prepare → create → start → mount → inject credentials → clone repos → run scripts → launch agent), streaming every step over **SSE** in real time. Each sandbox runs an isolated coding agent backed by its provider's API.
+**Clients** (CLI, REST API, desktop app, mobile browser, Slack/WhatsApp) connect to the **CIAB control plane** — an Axum-based server that handles auth, streaming, and orchestration. The control plane provisions sandboxes through a **9-step pipeline** (validate → prepare → create → start → mount → inject credentials → clone repos → run scripts → launch agent), streaming every step over **SSE** in real time.
 
 <br>
 
@@ -90,6 +101,9 @@ ciab sandbox create --provider claude-code \
 
 # Stream a conversation
 ciab agent chat <sandbox-id> --message "Refactor the auth module" --stream
+
+# Access from your phone — open the Gateway page and scan the QR code
+# Or navigate to http://<your-ip>:9090 from any browser
 ```
 
 <br>
@@ -101,34 +115,38 @@ ciab agent chat <sandbox-id> --message "Refactor the auth module" --stream
 | **Multi-agent** | Run Claude Code, Codex, Gemini CLI, and Cursor side-by-side. Switch providers with one config change. |
 | **Isolated sandboxes** | Each agent gets its own workspace, env vars, credentials, and mounted repos. Local processes or containers. |
 | **Real-time streaming** | Watch agent output as it happens — text deltas, tool use, provisioning steps, logs — all over SSE. |
-| **Mobile access** | Scan a QR code to chat with agents from your iPhone, iPad, or any device. Full streaming on mobile. |
+| **Access anywhere** | Open sandboxes from your phone, tablet, laptop, or CI pipeline. Built-in web gateway with QR codes, mDNS, and tunneling. |
 | **Workspaces** | Reusable, TOML-configurable environment definitions. Bundle repos, skills, pre-commands, binaries, and agent config. |
+| **Skills catalog** | Install agent skills from the skills.sh open registry — React, security, Docker, and more. |
 | **Encrypted credentials** | AES-256-GCM vault with OAuth2 support. Credentials injected at provisioning time, never stored in plaintext. |
-| **Remote access** | Expose sandboxes via bore, Cloudflare Tunnel, ngrok, or frp. Token-scoped auth with LAN discovery. |
+| **Remote tunnels** | One-click expose via bore, Cloudflare Tunnel, ngrok, or frp. Token-scoped auth with LAN discovery. |
 | **Channels** | Pipe agent conversations through Slack, WhatsApp, or webhooks. Per-sender session tracking. |
-| **Desktop + Web app** | Tauri + React visual management — create sandboxes, watch streams, manage workspaces. Accessible via browser on any device. |
+| **Desktop + Web** | Tauri + React desktop app and responsive web UI — same interface on any device. |
 
 <br>
 
-## Access Methods
+## Every Way to Access Your Sandboxes
 
 ```bash
-# CLI
+# CLI — create and chat
 ciab sandbox create --provider claude-code
 ciab agent chat <id> --message "Fix the bug" --stream
 
-# REST API
+# REST API — programmatic control
 curl -X POST http://localhost:9090/api/v1/sandboxes \
   -H "Content-Type: application/json" \
   -d '{"agent_provider": "claude-code", "env_vars": {"ANTHROPIC_API_KEY": "..."}}'
 
-# SSE streaming
+# SSE streaming — real-time events
 curl -N http://localhost:9090/api/v1/sandboxes/<id>/stream
+
+# Web browser — from any device on the network
+open http://localhost:9090          # desktop
+open http://ciab.local.local:9090   # mDNS (Apple devices auto-discover)
+# or scan QR code from Gateway page  # phone / tablet
 
 # Desktop app
 make desktop
-
-# Mobile — scan QR from Gateway page or open http://<your-ip>:9090
 ```
 
 <br>
@@ -145,11 +163,12 @@ provider = "claude-code"
 [[repositories]]
 url = "https://github.com/org/repo.git"
 branch = "main"
-path = "/workspace/repo"
+
+[[skills]]
+source = "vercel-labs/ai-sdk-best-practices"
 
 [[pre_commands]]
 command = "npm install"
-working_dir = "/workspace/repo"
 
 [agent_config]
 model = "claude-sonnet-4-20250514"
@@ -177,7 +196,7 @@ crates/
   ciab-streaming        SSE broker with event buffer and replay
   ciab-provisioning     9-step sandbox provisioning pipeline
   ciab-credentials      AES-256-GCM encrypted vault, OAuth2
-  ciab-gateway          Remote tunneling (bore, Cloudflare, ngrok, frp) + LAN discovery
+  ciab-gateway          Web gateway + tunneling (bore, Cloudflare, ngrok, frp) + LAN/mDNS
   ciab-channels         Slack, WhatsApp, webhook adapters
   ciab-agent-claude     Claude Code provider
   ciab-agent-codex      Codex provider

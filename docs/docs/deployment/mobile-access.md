@@ -2,7 +2,7 @@
 
 Chat with your coding agents from **any device** — iPhone, iPad, Android tablet, or any browser. CIAB's web UI works on mobile with full real-time streaming support.
 
-![Gateway QR Code](../assets/screenshots/ciab-gateway-qr-mobile.gif)
+![Gateway](../assets/screenshots/gateway.png)
 
 ## How It Works
 
