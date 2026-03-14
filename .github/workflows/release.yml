@@ -107,8 +107,14 @@ jobs:
       - name: Collect DMG artifacts
         run: |
           mkdir -p dist
+          # Tauri builds to different paths depending on target
+          find . -name "*.dmg" -path "*/bundle/dmg/*" 2>/dev/null | head -5
+          cp target/universal-apple-darwin/release/bundle/dmg/*.dmg dist/ 2>/dev/null || \
           cp desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg dist/ 2>/dev/null || \
+          cp target/release/bundle/dmg/*.dmg dist/ 2>/dev/null || \
           cp desktop/src-tauri/target/release/bundle/dmg/*.dmg dist/ 2>/dev/null || true
+          echo "Files in dist:"
+          ls -la dist/ || true
           cd dist
           shopt -s nullglob
           dmg_files=(*.dmg)
