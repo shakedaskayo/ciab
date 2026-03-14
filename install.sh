@@ -1,15 +1,34 @@
 #!/usr/bin/env bash
 # CIAB installer — https://github.com/shakedaskayo/ciab
 #
-# Usage:
+# Usage (public repo):
 #   curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh | bash
 #   curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh | bash -s -- --version v0.1.0
+#
+# Usage (private repo — set GITHUB_TOKEN first):
+#   export GITHUB_TOKEN=ghp_...
+#   curl -fsSL -H "Authorization: token $GITHUB_TOKEN" \
+#     https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh | bash
 
 set -euo pipefail
 
 REPO="shakedaskayo/ciab"
 INSTALL_DIR="${CIAB_INSTALL_DIR:-/usr/local/bin}"
 VERSION=""
+
+# ── Auth header for private repo support ─────────────────────────────
+AUTH_HEADER=""
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  AUTH_HEADER="Authorization: token ${GITHUB_TOKEN}"
+fi
+
+curl_auth() {
+  if [ -n "$AUTH_HEADER" ]; then
+    curl -H "$AUTH_HEADER" "$@"
+  else
+    curl "$@"
+  fi
+}
 
 # ── Parse args ────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -18,6 +37,10 @@ while [[ $# -gt 0 ]]; do
     --dir|-d)     INSTALL_DIR="$2"; shift 2 ;;
     --help|-h)
       echo "Usage: install.sh [--version VERSION] [--dir INSTALL_DIR]"
+      echo ""
+      echo "Environment:"
+      echo "  GITHUB_TOKEN        GitHub token (required for private repos)"
+      echo "  CIAB_INSTALL_DIR    Install directory (default: /usr/local/bin)"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -51,15 +74,61 @@ resolve_version() {
   fi
 
   local latest
-  latest=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+  latest=$(curl_auth -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
     | grep '"tag_name"' | head -1 | cut -d'"' -f4)
 
   if [ -z "$latest" ]; then
-    echo "Error: Could not determine latest version. Specify one with --version." >&2
+    echo "Error: Could not determine latest version." >&2
+    echo "  - For private repos, set GITHUB_TOKEN" >&2
+    echo "  - Or specify a version with --version" >&2
     exit 1
   fi
 
   echo "$latest"
+}
+
+# ── Download release asset (handles private repo redirect) ───────────
+download_asset() {
+  local url="$1"
+  local dest="$2"
+
+  if [ -n "${GITHUB_TOKEN:-}" ]; then
+    # For private repos, use the GitHub API to get the asset download URL
+    # GitHub releases redirect to S3, but private repos need Accept header
+    curl_auth -fSL --progress-bar \
+      -H "Accept: application/octet-stream" \
+      "$url" -o "$dest"
+  else
+    curl -fSL --progress-bar "$url" -o "$dest"
+  fi
+}
+
+# ── Verify checksum ──────────────────────────────────────────────────
+verify_checksum() {
+  local archive="$1"
+  local checksum_file="$2"
+
+  echo "Verifying checksum..."
+  local expected actual
+  expected=$(awk '{print $1}' "$checksum_file")
+
+  if command -v sha256sum &>/dev/null; then
+    actual=$(sha256sum "$archive" | awk '{print $1}')
+  elif command -v shasum &>/dev/null; then
+    actual=$(shasum -a 256 "$archive" | awk '{print $1}')
+  else
+    echo "  Warning: No sha256sum or shasum found, skipping checksum verification"
+    return 0
+  fi
+
+  if [ "$expected" = "$actual" ]; then
+    echo "  Checksum OK"
+  else
+    echo "Error: Checksum mismatch!" >&2
+    echo "  Expected: $expected" >&2
+    echo "  Got:      $actual" >&2
+    exit 1
+  fi
 }
 
 # ── Main ──────────────────────────────────────────────────────────────
@@ -80,31 +149,36 @@ main() {
   trap 'rm -rf "$tmp_dir"' EXIT
 
   # Download
-  if ! curl -fSL --progress-bar "$download_url" -o "${tmp_dir}/${artifact_name}"; then
+  if ! download_asset "$download_url" "${tmp_dir}/${artifact_name}"; then
     echo ""
     echo "Error: Failed to download ${download_url}"
     echo "Check that the version '${version}' exists at:"
     echo "  https://github.com/${REPO}/releases"
+    if [ -z "${GITHUB_TOKEN:-}" ]; then
+      echo ""
+      echo "For private repos, set GITHUB_TOKEN:"
+      echo "  export GITHUB_TOKEN=ghp_..."
+    fi
     exit 1
   fi
 
   # Verify checksum if available
   local sha_url="${download_url}.sha256"
-  if curl -fsSL "$sha_url" -o "${tmp_dir}/checksum.sha256" 2>/dev/null; then
-    echo "Verifying checksum..."
-    cd "$tmp_dir"
-    if command -v sha256sum &>/dev/null; then
-      sha256sum -c checksum.sha256
-    elif command -v shasum &>/dev/null; then
-      shasum -a 256 -c checksum.sha256
-    fi
-    cd - >/dev/null
+  if curl_auth -fsSL "$sha_url" -o "${tmp_dir}/checksum.sha256" 2>/dev/null; then
+    verify_checksum "${tmp_dir}/${artifact_name}" "${tmp_dir}/checksum.sha256"
   fi
 
   # Extract
   tar xzf "${tmp_dir}/${artifact_name}" -C "$tmp_dir"
 
+  # Verify extracted binary runs
+  if ! "${tmp_dir}/ciab" --version &>/dev/null; then
+    echo "Error: Extracted binary failed to run. Wrong platform?" >&2
+    exit 1
+  fi
+
   # Install
+  mkdir -p "$INSTALL_DIR" 2>/dev/null || true
   if [ -w "$INSTALL_DIR" ]; then
     mv "${tmp_dir}/ciab" "${INSTALL_DIR}/ciab"
   else

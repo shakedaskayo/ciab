@@ -61,7 +61,11 @@ jobs:
           cp target/${{ matrix.target }}/release/ciab dist/ciab
           cd dist
           tar czf ${{ matrix.artifact }}.tar.gz ciab
-          shasum -a 256 ${{ matrix.artifact }}.tar.gz > ${{ matrix.artifact }}.tar.gz.sha256
+          if command -v sha256sum &>/dev/null; then
+            sha256sum ${{ matrix.artifact }}.tar.gz > ${{ matrix.artifact }}.tar.gz.sha256
+          else
+            shasum -a 256 ${{ matrix.artifact }}.tar.gz > ${{ matrix.artifact }}.tar.gz.sha256
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
@@ -105,7 +109,13 @@ jobs:
           cp desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg dist/ 2>/dev/null || \
           cp desktop/src-tauri/target/release/bundle/dmg/*.dmg dist/ 2>/dev/null || true
           cd dist
-          for f in *.dmg; do shasum -a 256 "$f" > "$f.sha256"; done
+          for f in *.dmg; do
+            if command -v sha256sum &>/dev/null; then
+              sha256sum "$f" > "$f.sha256"
+            else
+              shasum -a 256 "$f" > "$f.sha256"
+            fi
+          done
 
       - uses: actions/upload-artifact@v4
         with:
