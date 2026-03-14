@@ -27,10 +27,10 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy
-        run: cargo clippy --workspace --all-targets
+        run: cargo clippy --workspace --all-targets --exclude ciab-desktop
 
       - name: Build
-        run: cargo build --workspace
+        run: cargo build --workspace --exclude ciab-desktop
 
   test:
     name: Test
@@ -43,7 +43,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Run tests
-        run: cargo test --workspace
+        run: cargo test --workspace --exclude ciab-desktop
 
   desktop-lint:
     name: Desktop Lint
