@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/shakedaskayo/ciab/actions/workflows/ci.yml"><img src="https://github.com/shakedaskayo/ciab/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/shakedaskayo/ciab/releases/latest"><img src="https://img.shields.io/github/v/release/shakedaskayo/ciab?label=release&color=C4693D" alt="Release"></a>
+  <a href="https://github.com/shakedaskayo/ciab/releases/latest"><img src="https://img.shields.io/github/v/release/shakedaskayo/ciab?include_prereleases&label=release&color=C4693D" alt="Release"></a>
   <a href="https://github.com/shakedaskayo/ciab/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-5B8CA8.svg" alt="License"></a>
   <a href="https://shakedaskayo.github.io/ciab"><img src="https://img.shields.io/badge/docs-shakedaskayo.github.io%2Fciab-C4693D" alt="Docs"></a>
   <a href="https://github.com/shakedaskayo/ciab/stargazers"><img src="https://img.shields.io/github/stars/shakedaskayo/ciab?style=social" alt="GitHub Stars"></a>
