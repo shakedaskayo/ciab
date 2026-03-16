@@ -316,6 +316,7 @@ fn resolve_runtime(state: &AppState, spec: &WorkspaceSpec) -> Arc<dyn SandboxRun
             RuntimeBackend::Local => "local",
             RuntimeBackend::OpenSandbox => "opensandbox",
             RuntimeBackend::Docker => "docker",
+            RuntimeBackend::Kubernetes => "kubernetes",
             RuntimeBackend::Default => return state.runtime.clone(),
         };
         if let Some(rt) = state.runtimes.get(backend_key) {
@@ -494,6 +495,7 @@ fn workspace_to_sandbox_spec(
         ciab_core::types::workspace::RuntimeBackend::Local => Some("local".to_string()),
         ciab_core::types::workspace::RuntimeBackend::OpenSandbox => Some("opensandbox".to_string()),
         ciab_core::types::workspace::RuntimeBackend::Docker => Some("docker".to_string()),
+        ciab_core::types::workspace::RuntimeBackend::Kubernetes => Some("kubernetes".to_string()),
     });
 
     // Pass AgentFS config through labels so the pipeline can read it

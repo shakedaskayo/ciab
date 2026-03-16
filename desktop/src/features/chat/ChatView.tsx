@@ -31,6 +31,8 @@ import UserInputRequest from "./UserInputRequest";
 import SkillPicker from "./SkillPicker";
 import ActivityPanel from "./ActivityPanel";
 import type { FileActivity } from "./ActivityPanel";
+import NewSessionDialog from "./NewSessionDialog";
+import type { AgentConfig } from "@/lib/api/types";
 import TodoListBlock, { parseTodoInput } from "./TodoListBlock";
 import ToolUseBlock from "./ToolUseBlock";
 import AgentProviderIcon from "@/components/shared/AgentProviderIcon";
@@ -52,7 +54,6 @@ import {
   Brain,
   ChevronDown,
   ChevronRight,
-  Bot,
   AlertTriangle,
   PanelRightOpen,
   PanelRightClose,
@@ -62,6 +63,7 @@ import { formatRelativeTime } from "@/lib/utils/format";
 interface Props {
   sandboxId: string;
   agentProvider?: string;
+  agentConfig?: AgentConfig;
 }
 
 // Optimistic user message shown before server confirms
@@ -71,7 +73,7 @@ interface OptimisticMessage {
   timestamp: Date;
 }
 
-export default function ChatView({ sandboxId, agentProvider }: Props) {
+export default function ChatView({ sandboxId, agentProvider, agentConfig }: Props) {
   const { data: sessionList, refetch: refetchSessions } = useSessions(sandboxId);
   const createSession = useCreateSession(sandboxId);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -102,7 +104,11 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
   >([]);
   const activeSubagentRef = useRef<string | null>(null);
   const activeToolMetaRef = useRef<{ id: string; agentName: string | null } | null>(null);
+  // Track the parent "Agent" tool call while a subagent is running its own tools
+  const [activeAgentCall, setActiveAgentCall] = useState<{ input: unknown } | null>(null);
+  const activeAgentCallRef = useRef<{ input: unknown } | null>(null);
   const [showActivityPanel, setShowActivityPanel] = useState(true);
+  const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
 
@@ -341,11 +347,24 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
           activeSubagentRef.current = subName;
           setIsProcessing(true);
           setOptimisticMsg(null);
+          // Snapshot the current Agent tool input so we can show it nested while subagent runs
+          setStreamingToolInput((prevInput) => {
+            let parsedInput: unknown = {};
+            if (prevInput) {
+              try { parsedInput = JSON.parse(prevInput); } catch { parsedInput = {}; }
+            }
+            const snap = { input: parsedInput };
+            setActiveAgentCall(snap);
+            activeAgentCallRef.current = snap;
+            return prevInput; // don't change it
+          });
           break;
         }
         case "subagent_end":
           setActiveSubagent(null);
           activeSubagentRef.current = null;
+          setActiveAgentCall(null);
+          activeAgentCallRef.current = null;
           break;
         case "permission_request": {
           const data = event.data as PermissionRequestData;
@@ -608,8 +627,13 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
   }, []);
 
   const handleNewSession = useCallback(() => {
-    createSession.mutate(undefined, {
+    setShowNewSessionDialog(true);
+  }, []);
+
+  const handleCreateSession = useCallback((metadata: Record<string, unknown>) => {
+    createSession.mutate(Object.keys(metadata).length > 0 ? metadata : undefined, {
       onSuccess: (newSession) => {
+        setShowNewSessionDialog(false);
         setActiveSessionId(newSession.id);
         clearTransientState();
         refetchSessions();
@@ -646,7 +670,20 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
 
   // No sessions at all
   if (!activeSessionId) {
-    return <WelcomeScreen onNewSession={handleNewSession} />;
+    return (
+      <>
+        <WelcomeScreen onNewSession={handleNewSession} />
+        {showNewSessionDialog && (
+          <NewSessionDialog
+            agentProvider={agentProvider ?? "claude-code"}
+            currentAgentConfig={agentConfig}
+            onClose={() => setShowNewSessionDialog(false)}
+            onCreate={handleCreateSession}
+            isPending={createSession.isPending}
+          />
+        )}
+      </>
+    );
   }
 
   return (
@@ -806,11 +843,6 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
             <ThinkingBlock text={thinkingText} />
           )}
 
-          {/* Subagent activity */}
-          {activeSubagent && (
-            <SubagentIndicator name={activeSubagent} />
-          )}
-
           {/* Live todo list */}
           {liveTodos.length > 0 && (
             <TodoListBlock todos={liveTodos} isLive={isProcessing} />
@@ -843,37 +875,67 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
           {/* Streaming text with markdown */}
           {streamingText && <StreamingMessage text={streamingText} thinkingText={thinkingText} />}
 
-          {/* Live tool call — show the actual ToolUseBlock with streaming input */}
-          {isProcessing && activeTool && (
+          {/* Live tool call — show the actual ToolUseBlock with streaming input.
+              When a subagent is running (activeAgentCall set), show the parent Agent
+              tool as a nested container with the subagent's current tool inside. */}
+          {isProcessing && (activeTool || activeAgentCall) && (
             <div className="flex gap-2 sm:gap-3 animate-fade-in">
               <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-ciab-copper/10 ring-1 ring-ciab-copper/20 flex items-center justify-center flex-shrink-0 mt-1">
                 <AgentProviderIcon provider="claude-code" size={14} />
               </div>
               <div className="flex-1 min-w-0">
-                {activeSubagent && (
-                  <span className="text-[9px] font-mono text-violet-400/70 mb-0.5 block">
-                    ↳ {activeSubagent}
-                  </span>
-                )}
                 <span className="text-[10px] font-mono font-medium tracking-wide text-ciab-copper/60">
                   AGENT
                 </span>
-                <div className="mt-1">
-                  <ToolUseBlock
-                    name={activeTool}
-                    input={(() => {
-                      if (!streamingToolInput) return {};
-                      try { return JSON.parse(streamingToolInput); } catch { return {}; }
-                    })()}
-                    isExecuting
-                  />
+                <div className="mt-1 space-y-1.5">
+                  {activeAgentCall ? (
+                    /* Subagent running: parent Agent tool + nested subagent + its current tool */
+                    <>
+                      <ToolUseBlock
+                        name="Agent"
+                        input={activeAgentCall.input}
+                        isExecuting
+                      />
+                      {activeSubagent && (
+                        <div className="ml-4 pl-3 border-l-2 border-violet-500/20 space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                            <span className="text-[10px] font-mono text-violet-400/80 font-medium">
+                              {activeSubagent}
+                            </span>
+                          </div>
+                          {activeTool && (
+                            <ToolUseBlock
+                              name={activeTool}
+                              input={(() => {
+                                if (!streamingToolInput) return {};
+                                try { return JSON.parse(streamingToolInput); } catch { return {}; }
+                              })()}
+                              isExecuting
+                              agentName={activeSubagent}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : activeTool ? (
+                    /* Direct tool call, no subagent context */
+                    <ToolUseBlock
+                      name={activeTool}
+                      input={(() => {
+                        if (!streamingToolInput) return {};
+                        try { return JSON.parse(streamingToolInput); } catch { return {}; }
+                      })()}
+                      isExecuting
+                    />
+                  ) : null}
                 </div>
               </div>
             </div>
           )}
 
           {/* Processing indicator (no active tool — between tools or thinking) */}
-          {isProcessing && !activeTool && !streamingText && !thinkingText && (
+          {isProcessing && !activeTool && !activeAgentCall && !streamingText && !thinkingText && (
             <ThinkingIndicator activeTool={null} toolProgress={toolProgressText} />
           )}
         </div>
@@ -955,6 +1017,17 @@ export default function ChatView({ sandboxId, agentProvider }: Props) {
         </div>
       )}
       </div>{/* end main content flex */}
+
+      {/* New session dialog */}
+      {showNewSessionDialog && (
+        <NewSessionDialog
+          agentProvider={agentProvider ?? "claude-code"}
+          currentAgentConfig={agentConfig}
+          onClose={() => setShowNewSessionDialog(false)}
+          onCreate={handleCreateSession}
+          isPending={createSession.isPending}
+        />
+      )}
     </div>
   );
 }
@@ -1311,26 +1384,6 @@ function ThinkingBlock({ text }: { text: string }) {
               </p>
             </div>
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Subagent Indicator ─── */
-
-function SubagentIndicator({ name }: { name: string }) {
-  return (
-    <div className="flex gap-2 sm:gap-3 animate-fade-in">
-      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-ciab-steel-blue/10 ring-1 ring-ciab-steel-blue/20 flex items-center justify-center flex-shrink-0 mt-1">
-        <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-ciab-steel-blue" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="mt-1 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-ciab-steel-blue/5 border border-ciab-steel-blue/15">
-          <span className="w-1.5 h-1.5 rounded-full bg-ciab-steel-blue animate-pulse" />
-          <span className="text-[11px] font-mono text-ciab-steel-blue">
-            Subagent: <span className="font-medium">{name}</span>
-          </span>
         </div>
       </div>
     </div>

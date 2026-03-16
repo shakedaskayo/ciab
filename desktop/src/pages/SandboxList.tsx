@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { useSandboxes, useCreateSandbox } from "@/lib/hooks/use-sandboxes";
+import { useSandboxes } from "@/lib/hooks/use-sandboxes";
 import SandboxGrid from "@/features/dashboard/SandboxGrid";
 import CreateSandboxDialog from "@/features/sandbox/CreateSandboxDialog";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
@@ -52,7 +52,6 @@ export default function SandboxList() {
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<FilterTab>("all");
   const { data: sandboxList, isLoading, isFetching } = useSandboxes();
-  const createSandbox = useCreateSandbox();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [spinning, setSpinning] = useState(false);
@@ -227,16 +226,9 @@ export default function SandboxList() {
       {showCreate && (
         <CreateSandboxDialog
           onClose={() => setShowCreate(false)}
-          onCreate={(spec) => {
-            createSandbox.mutate(spec, {
-              onSuccess: (result) => {
-                setShowCreate(false);
-                // Navigate directly to the new sandbox — the placeholder
-                // record is already in the DB with state "creating", so
-                // the detail page will show provisioning progress.
-                navigate(`/sandboxes/${result.sandbox_id}`);
-              },
-            });
+          onSuccess={(sandboxId) => {
+            setShowCreate(false);
+            navigate(`/sandboxes/${sandboxId}`);
           }}
         />
       )}

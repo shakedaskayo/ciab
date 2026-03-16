@@ -442,6 +442,22 @@ pub enum WorkspaceCommand {
         /// Create from a TOML file
         #[arg(long)]
         from_toml: Option<String>,
+
+        /// Runtime backend (local, opensandbox, docker, kubernetes)
+        #[arg(long)]
+        runtime_backend: Option<String>,
+
+        /// Kubernetes namespace override
+        #[arg(long)]
+        k8s_namespace: Option<String>,
+
+        /// Kubernetes RuntimeClass for microvm (e.g. kata-containers)
+        #[arg(long)]
+        k8s_runtime_class: Option<String>,
+
+        /// Kubernetes container image override
+        #[arg(long)]
+        k8s_image: Option<String>,
     },
     /// List workspaces
     List {

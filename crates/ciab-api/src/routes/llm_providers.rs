@@ -396,6 +396,156 @@ pub async fn compatibility(State(state): State<AppState>) -> Result<impl IntoRes
 }
 
 // ---------------------------------------------------------------------------
+// Host Claude auth check
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Serialize)]
+pub struct HostClaudeAuthStatus {
+    /// Whether valid credentials were found on the host.
+    pub found: bool,
+    /// Whether the token is expired.
+    pub expired: bool,
+    /// Subscription type (e.g. "pro", "enterprise") if known.
+    pub subscription_type: Option<String>,
+    /// Seconds until the token expires. None if unknown or expired.
+    pub expires_in_secs: Option<i64>,
+    /// Human-readable status message.
+    pub message: String,
+}
+
+pub async fn host_claude_auth_status() -> impl IntoResponse {
+    let status = check_host_claude_auth();
+    Json(status)
+}
+
+fn check_host_claude_auth() -> HostClaudeAuthStatus {
+    // Try macOS Keychain first
+    #[cfg(target_os = "macos")]
+    if let Some(creds) = read_keychain_credentials_for_status() {
+        return parse_credentials_status(&creds);
+    }
+
+    // Try ~/.claude/.credentials.json
+    let credentials_path = {
+        let home = std::env::var("HOME").unwrap_or_else(|_| "~".to_string());
+        let config_dir = std::env::var("CLAUDE_CONFIG_DIR")
+            .unwrap_or_else(|_| format!("{}/.claude", home));
+        std::path::PathBuf::from(config_dir).join(".credentials.json")
+    };
+
+    if let Ok(raw) = std::fs::read_to_string(&credentials_path) {
+        if let Ok(value) = serde_json::from_str::<serde_json::Value>(&raw) {
+            return parse_credentials_status(&value);
+        }
+    }
+
+    // Check ANTHROPIC_API_KEY as fallback
+    if std::env::var("ANTHROPIC_API_KEY").map(|k| !k.is_empty()).unwrap_or(false) {
+        return HostClaudeAuthStatus {
+            found: true,
+            expired: false,
+            subscription_type: Some("api-key".to_string()),
+            expires_in_secs: None,
+            message: "ANTHROPIC_API_KEY found in environment (API pricing)".to_string(),
+        };
+    }
+
+    HostClaudeAuthStatus {
+        found: false,
+        expired: false,
+        subscription_type: None,
+        expires_in_secs: None,
+        message: "No Claude credentials found on this host. Log in via `claude` in a terminal or add an API key in Settings.".to_string(),
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn read_keychain_credentials_for_status() -> Option<serde_json::Value> {
+    let output = std::process::Command::new("security")
+        .args(["find-generic-password", "-s", "Claude Code-credentials", "-w"])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let raw = String::from_utf8(output.stdout).ok()?;
+    let raw = raw.trim();
+    if raw.is_empty() {
+        return None;
+    }
+    serde_json::from_str(raw).ok()
+}
+
+fn parse_credentials_status(value: &serde_json::Value) -> HostClaudeAuthStatus {
+    let oauth = match value.get("claudeAiOauth") {
+        Some(v) => v,
+        None => return HostClaudeAuthStatus {
+            found: false,
+            expired: false,
+            subscription_type: None,
+            expires_in_secs: None,
+            message: "Credential file found but no OAuth data present.".to_string(),
+        },
+    };
+
+    let has_token = oauth.get("accessToken")
+        .and_then(|v| v.as_str())
+        .map(|s| !s.is_empty())
+        .unwrap_or(false);
+
+    if !has_token {
+        return HostClaudeAuthStatus {
+            found: false,
+            expired: false,
+            subscription_type: None,
+            expires_in_secs: None,
+            message: "OAuth credentials found but access token is empty.".to_string(),
+        };
+    }
+
+    let subscription_type = oauth
+        .get("subscriptionType")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    let expires_at_ms = oauth.get("expiresAt").and_then(|v| v.as_i64()).unwrap_or(0);
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0);
+    let expires_in_secs = if expires_at_ms > 0 {
+        Some((expires_at_ms - now_ms) / 1000)
+    } else {
+        None
+    };
+
+    let expired = expires_in_secs.map(|s| s <= 0).unwrap_or(false);
+    let sub = subscription_type.as_deref().unwrap_or("unknown");
+
+    let message = if expired {
+        format!("Claude {sub} subscription token has expired. Run `claude` in a terminal to refresh.")
+    } else if let Some(secs) = expires_in_secs {
+        let hours = secs / 3600;
+        let mins = (secs % 3600) / 60;
+        if hours > 0 {
+            format!("Claude {sub} subscription active (expires in {hours}h{mins}m)")
+        } else {
+            format!("Claude {sub} subscription active (expires in {mins}m — refresh soon)")
+        }
+    } else {
+        format!("Claude {sub} subscription active")
+    };
+
+    HostClaudeAuthStatus {
+        found: true,
+        expired,
+        subscription_type,
+        expires_in_secs,
+        message,
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

@@ -15,8 +15,16 @@ request_timeout_secs = 300     # Request timeout
 cors_origins = ["*"]           # CORS allowed origins
 
 [runtime]
-opensandbox_url = "http://localhost:8000"   # OpenSandbox API URL
+backend = "local"                          # "local", "docker", "opensandbox", "kubernetes"
+# opensandbox_url = "http://localhost:8000"   # OpenSandbox API URL
 # opensandbox_api_key = "${OPENSANDBOX_API_KEY}"  # Optional API key
+
+# [runtime.kubernetes]
+# namespace = "ciab-agents"
+# agent_image = "ghcr.io/shakedaskayo/ciab-claude:latest"
+# runtime_class = "kata-containers"         # Optional: Kata Containers
+# storage_class = "standard"
+# workspace_pvc_size = "10Gi"
 
 [agents]
 default_provider = "claude-code"   # Default agent provider
@@ -87,10 +95,32 @@ format = "json"                        # Log format: json, pretty
 
 ### `[runtime]`
 
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `opensandbox_url` | string | Yes | OpenSandbox API base URL |
-| `opensandbox_api_key` | string | No | OpenSandbox API key |
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `backend` | string | `local` | Runtime backend: `local`, `docker`, `opensandbox`, `kubernetes` |
+| `opensandbox_url` | string | — | OpenSandbox API base URL (opensandbox backend) |
+| `opensandbox_api_key` | string | — | OpenSandbox API key |
+
+### `[runtime.kubernetes]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `namespace` | string | `ciab-agents` | Namespace for agent Pods |
+| `agent_image` | string | — | Default container image for agent Pods |
+| `runtime_class` | string | — | RuntimeClass name (e.g. `kata-containers` for microVM isolation) |
+| `storage_class` | string | `standard` | StorageClass for workspace PVCs |
+| `workspace_pvc_size` | string | `10Gi` | PVC size per workspace |
+| `create_network_policy` | bool | `true` | Create NetworkPolicy to isolate agent Pods |
+| `run_as_non_root` | bool | `true` | Run agent containers as non-root |
+| `drop_all_capabilities` | bool | `true` | Drop all Linux capabilities |
+| `default_cpu_request` | string | `500m` | Default CPU request |
+| `default_cpu_limit` | string | `2` | Default CPU limit |
+| `default_memory_request` | string | `256Mi` | Default memory request |
+| `default_memory_limit` | string | `2Gi` | Default memory limit |
+| `kubeconfig` | string | — | Path to kubeconfig (omit for in-cluster) |
+| `context` | string | — | Kubeconfig context |
+
+See [Kubernetes Deployment](../deployment/kubernetes.md) for full setup instructions.
 
 ### `[agents]`
 

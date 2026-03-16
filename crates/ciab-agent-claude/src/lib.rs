@@ -218,12 +218,37 @@ impl AgentProvider for ClaudeCodeProvider {
             );
         }
 
-        // LLM provider override — inject base URL and API key from extra config.
+        // LLM provider override — inject base URL and credentials from extra config.
+        // For Ollama: ANTHROPIC_BASE_URL points to Ollama root (no /v1), ANTHROPIC_AUTH_TOKEN
+        // is set to "ollama", and ANTHROPIC_API_KEY is cleared (Ollama ignores auth).
         if let Some(base_url) = config.extra.get("llm_base_url").and_then(|v| v.as_str()) {
             env.insert("ANTHROPIC_BASE_URL".to_string(), base_url.to_string());
         }
+        if let Some(auth_token) = config.extra.get("llm_auth_token").and_then(|v| v.as_str()) {
+            env.insert("ANTHROPIC_AUTH_TOKEN".to_string(), auth_token.to_string());
+        }
         if let Some(api_key) = config.extra.get("llm_api_key").and_then(|v| v.as_str()) {
             env.insert("ANTHROPIC_API_KEY".to_string(), api_key.to_string());
+        }
+        // When using Ollama (or another provider that doesn't need an API key), clear
+        // ANTHROPIC_API_KEY so Claude Code doesn't reject the request for a missing key.
+        if config
+            .extra
+            .get("llm_skip_api_key")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false)
+        {
+            env.insert("ANTHROPIC_API_KEY".to_string(), String::new());
+        }
+
+        // Inherited host OAuth token — passed as CLAUDE_CODE_OAUTH_TOKEN.
+        // This is set by the sessions route when the local Claude subscription token
+        // was read from the macOS keychain or ~/.claude/.credentials.json.
+        if let Some(oauth_token) = config.extra.get("claude_oauth_token").and_then(|v| v.as_str()) {
+            env.insert("CLAUDE_CODE_OAUTH_TOKEN".to_string(), oauth_token.to_string());
+            // Ensure ANTHROPIC_API_KEY is not set — Claude Code prioritises oauth over api key
+            // but a non-empty ANTHROPIC_API_KEY can confuse it in some versions.
+            env.entry("ANTHROPIC_API_KEY".to_string()).or_insert_with(String::new);
         }
 
         AgentCommand {
@@ -243,6 +268,10 @@ impl AgentProvider for ClaudeCodeProvider {
     }
 
     fn required_env_vars(&self) -> Vec<String> {
+        // When using Ollama or another local provider, ANTHROPIC_API_KEY is not required.
+        // The provisioning pipeline checks these against the host env; returning the key
+        // here would cause a spurious warning for Ollama-only setups. We keep the check
+        // but the pipeline treats the warning as non-fatal.
         vec!["ANTHROPIC_API_KEY".to_string()]
     }
 
@@ -956,6 +985,27 @@ impl AgentProvider for ClaudeCodeProvider {
                 .collect(),
                 supports_model_override: true,
                 notes: Some("Via ANTHROPIC_BASE_URL override".to_string()),
+            },
+            // Ollama: Claude Code connects to Ollama's Anthropic-compatible API.
+            // ANTHROPIC_BASE_URL is the Ollama root (no /v1 suffix).
+            // ANTHROPIC_AUTH_TOKEN must be "ollama"; ANTHROPIC_API_KEY should be empty.
+            AgentLlmCompatibility {
+                agent_provider: "claude-code".to_string(),
+                llm_provider_kind: LlmProviderKind::Ollama,
+                env_var_mapping: [
+                    (
+                        "ANTHROPIC_BASE_URL".to_string(),
+                        "{base_url}".to_string(),
+                    ),
+                    ("ANTHROPIC_AUTH_TOKEN".to_string(), "ollama".to_string()),
+                    ("ANTHROPIC_API_KEY".to_string(), "".to_string()),
+                ]
+                .into_iter()
+                .collect(),
+                supports_model_override: true,
+                notes: Some(
+                    "Via ANTHROPIC_BASE_URL → Ollama Anthropic-compatible endpoint (no /v1)".to_string(),
+                ),
             },
         ]
     }

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://shakedaskayo.github.io/ciab
+    about: Check the docs before filing — your question may already be answered.
+  - name: Discussions
+    url: https://github.com/shakedaskayo/ciab/discussions
+    about: Questions, ideas, and general discussion belong here.

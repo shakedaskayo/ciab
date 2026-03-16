@@ -2,6 +2,76 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+// Re-export KubernetesRuntimeConfig for use in config parsing.
+// The actual type lives in ciab-sandbox-k8s to keep K8s deps isolated,
+// but we duplicate a minimal mirror here so ciab-core stays dep-free.
+// (ciab-cli and ciab-api depend on ciab-sandbox-k8s directly.)
+/// Kubernetes runtime backend configuration.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct KubernetesConfig {
+    /// Path to kubeconfig (None = in-cluster).
+    #[serde(default)]
+    pub kubeconfig: Option<String>,
+    /// kubeconfig context.
+    #[serde(default)]
+    pub context: Option<String>,
+    /// Namespace for agent Pods.
+    #[serde(default = "default_k8s_namespace")]
+    pub namespace: String,
+    /// Container image for agent Pods.
+    #[serde(default = "default_k8s_agent_image")]
+    pub agent_image: String,
+    /// RuntimeClass for microvm (e.g. "kata-containers").
+    #[serde(default)]
+    pub runtime_class: Option<String>,
+    /// Node selector labels.
+    #[serde(default)]
+    pub node_selector: HashMap<String, String>,
+    /// Storage class for PVCs.
+    #[serde(default)]
+    pub storage_class: Option<String>,
+    /// PVC size.
+    #[serde(default = "default_k8s_pvc_size")]
+    pub workspace_pvc_size: String,
+    /// Service account name for agent Pods.
+    #[serde(default)]
+    pub service_account: Option<String>,
+    /// Create a NetworkPolicy for agent Pods.
+    #[serde(default = "default_true_k8s")]
+    pub create_network_policy: bool,
+    /// Run containers as non-root.
+    #[serde(default = "default_true_k8s")]
+    pub run_as_non_root: bool,
+    /// Drop all Linux capabilities.
+    #[serde(default = "default_true_k8s")]
+    pub drop_all_capabilities: bool,
+    /// Default CPU request.
+    #[serde(default)]
+    pub default_cpu_request: Option<String>,
+    /// Default CPU limit.
+    #[serde(default)]
+    pub default_cpu_limit: Option<String>,
+    /// Default memory request.
+    #[serde(default)]
+    pub default_memory_request: Option<String>,
+    /// Default memory limit.
+    #[serde(default)]
+    pub default_memory_limit: Option<String>,
+}
+
+fn default_k8s_namespace() -> String {
+    "ciab-agents".to_string()
+}
+fn default_k8s_agent_image() -> String {
+    "ghcr.io/shakedaskayo/ciab-claude:latest".to_string()
+}
+fn default_k8s_pvc_size() -> String {
+    "10Gi".to_string()
+}
+fn default_true_k8s() -> bool {
+    true
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct AppConfig {
     #[serde(default)]
@@ -74,7 +144,7 @@ fn default_request_timeout() -> u64 {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct RuntimeConfig {
-    /// Runtime backend: "opensandbox", "docker", "local"
+    /// Runtime backend: "opensandbox", "docker", "local", "kubernetes"
     #[serde(default = "default_runtime_backend")]
     pub backend: String,
     /// OpenSandbox URL (only for opensandbox backend)
@@ -91,6 +161,9 @@ pub struct RuntimeConfig {
     /// Maximum concurrent local processes (only for local backend)
     #[serde(default)]
     pub local_max_processes: Option<u32>,
+    /// Kubernetes backend configuration (only for kubernetes backend)
+    #[serde(default)]
+    pub kubernetes: Option<KubernetesConfig>,
 }
 
 fn default_runtime_backend() -> String {

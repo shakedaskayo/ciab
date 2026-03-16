@@ -1,0 +1,16 @@
+apiVersion: v2
+name: ciab
+description: Claude-In-A-Box — deploy CIAB on Kubernetes with agent Pod management
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - ai
+  - agents
+  - coding
+  - claude
+home: https://shakedaskayo.github.io/ciab
+sources:
+  - https://github.com/shakedaskayo/ciab
+maintainers:
+  - name: shakedaskayo

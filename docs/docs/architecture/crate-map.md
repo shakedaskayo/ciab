@@ -1,6 +1,6 @@
 # Crate Map
 
-CIAB consists of 12 Rust crates organized in a workspace.
+CIAB consists of 13 Rust crates organized in a workspace.
 
 ## Crate Overview
 
@@ -10,6 +10,7 @@ CIAB consists of 12 Rust crates organized in a workspace.
 | `ciab-db` | SQLite persistence via sqlx | `Database`, migrations |
 | `ciab-streaming` | SSE broker and event buffering | `StreamBroker`, `EventBuffer` |
 | `ciab-sandbox` | OpenSandbox container client | `SandboxRuntime`, lifecycle + execd APIs |
+| `ciab-sandbox-k8s` | Kubernetes runtime backend | `KubernetesRuntime`, Pod builder, PVC, RBAC |
 | `ciab-agent-claude` | Claude Code agent provider | `ClaudeProvider` |
 | `ciab-agent-codex` | Codex agent provider | `CodexProvider` |
 | `ciab-agent-gemini` | Gemini CLI agent provider | `GeminiProvider` |
@@ -27,6 +28,7 @@ graph BT
     db[ciab-db] --> core
     streaming[ciab-streaming] --> core
     sandbox[ciab-sandbox] --> core
+    k8s[ciab-sandbox-k8s] --> core
     claude[ciab-agent-claude] --> core
     codex[ciab-agent-codex] --> core
     gemini[ciab-agent-gemini] --> core

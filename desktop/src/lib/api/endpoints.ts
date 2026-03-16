@@ -200,9 +200,10 @@ export const workspaces = {
 
   delete: (id: string) => del<void>(`/api/v1/workspaces/${id}`),
 
-  launch: (id: string) =>
+  launch: (id: string, spec_overrides?: Partial<import("./types").WorkspaceSpec>) =>
     post<{ sandbox_id: string; workspace_id: string; status: string }>(
-      `/api/v1/workspaces/${id}/launch`
+      `/api/v1/workspaces/${id}/launch`,
+      spec_overrides ? { spec_overrides } : undefined
     ),
 
   sandboxes: (id: string) =>
@@ -423,6 +424,15 @@ export const llmProviders = {
 
   compatibility: () =>
     get<AgentLlmCompatibility[]>("/api/v1/llm-providers/compatibility"),
+
+  claudeHostAuth: () =>
+    get<{
+      found: boolean;
+      expired: boolean;
+      subscription_type: string | null;
+      expires_in_secs: number | null;
+      message: string;
+    }>("/api/v1/llm-providers/claude-host-auth"),
 };
 
 // --- Agents ---

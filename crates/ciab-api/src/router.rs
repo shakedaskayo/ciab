@@ -260,6 +260,10 @@ pub fn build_router(state: AppState) -> axum::Router {
             get(routes::llm_providers::compatibility),
         )
         .route(
+            "/llm-providers/claude-host-auth",
+            get(routes::llm_providers::host_claude_auth_status),
+        )
+        .route(
             "/llm-providers/ollama/pull",
             post(routes::llm_providers::ollama_pull),
         )

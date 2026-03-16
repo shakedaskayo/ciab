@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X,
   Plus,
@@ -13,10 +13,17 @@ import {
   Loader2,
   FileCode2,
   Monitor,
+  Search,
+  Github,
+  Lock,
+  Globe,
+  Link2,
+  BookOpen,
 } from "lucide-react";
 import { useCreateWorkspace } from "@/lib/hooks/use-workspaces";
 import { useTemplates } from "@/lib/hooks/use-templates";
 import { useLlmProviders, useLlmProviderModels, useCompatibility } from "@/lib/hooks/use-llm-providers";
+import { useGitHubRepos, type GitHubRepo } from "@/lib/hooks/use-github-repos";
 import AgentProviderIcon from "@/components/shared/AgentProviderIcon";
 import ModelPicker from "@/features/settings/ModelPicker";
 import type {
@@ -25,6 +32,7 @@ import type {
   PreCommand,
   BinaryInstall,
   WorkspaceSpec,
+  WorkspaceSkill,
   RuntimeBackend,
 } from "@/lib/api/types";
 
@@ -53,6 +61,7 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
   const [binaries, setBinaries] = useState<BinaryInstall[]>([]);
   const [envVars, setEnvVars] = useState<Array<{ key: string; value: string }>>([]);
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [skills, setSkills] = useState<WorkspaceSkill[]>([]);
   const [runtimeBackend, setRuntimeBackend] = useState<RuntimeBackend>("default");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedLlmProviderId, setSelectedLlmProviderId] = useState("");
@@ -63,10 +72,10 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
   const [showBinaries, setShowBinaries] = useState(false);
   const [showEnv, setShowEnv] = useState(false);
   const [showAgent, setShowAgent] = useState(false);
+  const [showSkills, setShowSkills] = useState(false);
 
   const applyTemplate = (template: Workspace | null) => {
     if (!template) {
-      // Blank
       setStep("configure");
       return;
     }
@@ -75,15 +84,15 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
     setRepos(spec.repositories ?? []);
     setPreCommands(spec.pre_commands ?? []);
     setBinaries(spec.binaries ?? []);
+    setSkills(spec.skills ?? []);
     if (spec.env_vars) {
       setEnvVars(Object.entries(spec.env_vars).map(([key, value]) => ({ key, value })));
     }
     if (spec.agent?.system_prompt) {
       setSystemPrompt(spec.agent.system_prompt);
     }
-    if (spec.repositories && spec.repositories.length > 0) {
-      setShowRepos(true);
-    }
+    if (spec.repositories && spec.repositories.length > 0) setShowRepos(true);
+    if (spec.skills && spec.skills.length > 0) setShowSkills(true);
     setStep("configure");
   };
 
@@ -106,6 +115,7 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
       ...(repos.length > 0 ? { repositories: repos.filter((r) => r.url.trim()) } : {}),
       ...(preCommands.length > 0 ? { pre_commands: preCommands.filter((c) => c.command.trim()) } : {}),
       ...(binaries.length > 0 ? { binaries: binaries.filter((b) => b.name.trim()) } : {}),
+      ...(skills.length > 0 ? { skills: skills.filter((s) => s.source.trim()) } : {}),
       ...(Object.keys(envMap).length > 0 ? { env_vars: envMap } : {}),
       ...(runtimeBackend !== "default" ? { runtime: { backend: runtimeBackend } } : {}),
     };
@@ -244,12 +254,13 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
             {/* Runtime Backend */}
             <div>
               <label className="label">Runtime Backend</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
                 {([
                   { value: "default" as RuntimeBackend, label: "Default" },
                   { value: "local" as RuntimeBackend, label: "Local" },
                   { value: "opensandbox" as RuntimeBackend, label: "OpenSandbox" },
                   { value: "docker" as RuntimeBackend, label: "Docker" },
+                  { value: "kubernetes" as RuntimeBackend, label: "Kubernetes" },
                 ]).map((b) => (
                   <button
                     key={b.value}
@@ -288,7 +299,7 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
               </div>
             </div>
 
-            {/* Collapsible: Repositories */}
+            {/* Collapsible: Repositories with GitHub picker */}
             <CollapsibleSection
               title="Repositories"
               icon={GitBranch}
@@ -296,59 +307,66 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
               onToggle={() => setShowRepos(!showRepos)}
               count={repos.length}
             >
-              <div className="space-y-2">
-                {repos.map((repo, i) => (
-                  <div key={i} className="flex items-start gap-1.5">
-                    <div className="flex-1 space-y-1">
-                      <input
-                        type="text"
-                        value={repo.url}
-                        onChange={(e) => {
-                          const updated = [...repos];
-                          updated[i] = { ...updated[i], url: e.target.value };
-                          setRepos(updated);
-                        }}
-                        className="input w-full font-mono text-[11px]"
-                        placeholder="https://github.com/org/repo.git"
-                      />
-                      <div className="flex gap-1">
-                        <input
-                          type="text"
-                          value={repo.branch ?? ""}
-                          onChange={(e) => {
-                            const updated = [...repos];
-                            updated[i] = { ...updated[i], branch: e.target.value || undefined };
-                            setRepos(updated);
-                          }}
-                          className="input flex-1 font-mono text-[11px] py-1"
-                          placeholder="branch (main)"
-                        />
-                        <input
-                          type="text"
-                          value={repo.dest_path ?? ""}
-                          onChange={(e) => {
-                            const updated = [...repos];
-                            updated[i] = { ...updated[i], dest_path: e.target.value || undefined };
-                            setRepos(updated);
-                          }}
-                          className="input flex-1 font-mono text-[11px] py-1"
-                          placeholder="dest (/workspace/app)"
-                        />
-                      </div>
-                    </div>
+              <RepoSection repos={repos} setRepos={setRepos} />
+            </CollapsibleSection>
+
+            {/* Collapsible: Skills */}
+            <CollapsibleSection
+              title="Skills"
+              icon={BookOpen}
+              open={showSkills}
+              onToggle={() => setShowSkills(!showSkills)}
+              count={skills.length}
+            >
+              <div className="space-y-1.5">
+                {skills.map((skill, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={skill.name ?? ""}
+                      onChange={(e) => {
+                        const updated = [...skills];
+                        updated[i] = { ...updated[i], name: e.target.value || undefined };
+                        setSkills(updated);
+                      }}
+                      className="input w-28 text-[11px] py-1"
+                      placeholder="name"
+                    />
+                    <input
+                      type="text"
+                      value={skill.source}
+                      onChange={(e) => {
+                        const updated = [...skills];
+                        updated[i] = { ...updated[i], source: e.target.value };
+                        setSkills(updated);
+                      }}
+                      className="input flex-1 font-mono text-[11px] py-1"
+                      placeholder="path or URL"
+                    />
+                    <input
+                      type="text"
+                      value={skill.version ?? ""}
+                      onChange={(e) => {
+                        const updated = [...skills];
+                        updated[i] = { ...updated[i], version: e.target.value || undefined };
+                        setSkills(updated);
+                      }}
+                      className="input w-20 font-mono text-[11px] py-1"
+                      placeholder="version"
+                    />
                     <button
-                      onClick={() => setRepos(repos.filter((_, j) => j !== i))}
-                      className="p-1 text-ciab-text-muted hover:text-state-failed transition-colors mt-1"
+                      onClick={() => setSkills(skills.filter((_, j) => j !== i))}
+                      className="p-1 text-ciab-text-muted hover:text-state-failed transition-colors"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 ))}
                 <button
-                  onClick={() => setRepos([...repos, { url: "", branch: "main", dest_path: "/workspace/app" }])}
+                  onClick={() => setSkills([...skills, { source: "", name: "" }])}
                   className="text-[11px] text-ciab-text-muted hover:text-ciab-copper transition-colors flex items-center gap-1"
                 >
-                  <Plus className="w-3 h-3" /> Add repository
+                  <Plus className="w-3 h-3" /> Add skill
                 </button>
               </div>
             </CollapsibleSection>
@@ -594,6 +612,267 @@ export default function CreateWorkspaceDialog({ onClose }: Props) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Repo Section with GitHub picker
+// ---------------------------------------------------------------------------
+
+function RepoSection({
+  repos,
+  setRepos,
+}: {
+  repos: WorkspaceRepo[];
+  setRepos: (repos: WorkspaceRepo[]) => void;
+}) {
+  const { repos: ghRepos, loading: ghLoading, ghAvailable, error: ghError, checkAvailability, searchRepos } = useGitHubRepos();
+  const [ghChecked, setGhChecked] = useState(false);
+  const [ghSearch, setGhSearch] = useState("");
+  const [showGhPicker, setShowGhPicker] = useState(false);
+  const [expandedRepo, setExpandedRepo] = useState<number | null>(null);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Check GitHub availability once on mount
+  useEffect(() => {
+    checkAvailability().then(() => setGhChecked(true));
+  }, []);
+
+  useEffect(() => {
+    if (!showGhPicker) return;
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      searchRepos(ghSearch);
+    }, 300);
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    };
+  }, [ghSearch, showGhPicker]);
+
+  const handleSelectGhRepo = (repo: GitHubRepo) => {
+    // Don't add if already present
+    if (repos.some((r) => r.url === repo.url)) return;
+    setRepos([
+      ...repos,
+      {
+        url: repo.url,
+        branch: repo.defaultBranch || "main",
+        dest_path: `/workspace/${repo.fullName.split("/")[1] ?? "app"}`,
+        strategy: "clone",
+        depth: 1,
+      },
+    ]);
+    setShowGhPicker(false);
+    setGhSearch("");
+  };
+
+  return (
+    <div className="space-y-2">
+      {/* Manual repos */}
+      {repos.map((repo, i) => (
+        <div key={i} className="border border-ciab-border rounded-md overflow-hidden">
+          <div className="flex items-center gap-1.5 px-2 py-1.5">
+            <Link2 className="w-3 h-3 text-ciab-text-muted flex-shrink-0" />
+            <input
+              type="text"
+              value={repo.url}
+              onChange={(e) => {
+                const updated = [...repos];
+                updated[i] = { ...updated[i], url: e.target.value };
+                setRepos(updated);
+              }}
+              className="input flex-1 font-mono text-[11px] py-0.5 border-0 bg-transparent px-0 focus:ring-0"
+              placeholder="https://github.com/org/repo.git"
+            />
+            <button
+              onClick={() => setExpandedRepo(expandedRepo === i ? null : i)}
+              className="p-0.5 text-ciab-text-muted hover:text-ciab-copper transition-colors"
+              title="Settings"
+            >
+              {expandedRepo === i ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            </button>
+            <button
+              onClick={() => setRepos(repos.filter((_, j) => j !== i))}
+              className="p-0.5 text-ciab-text-muted hover:text-state-failed transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+          {expandedRepo === i && (
+            <div className="px-3 pb-2.5 pt-1 border-t border-ciab-border/50 space-y-1.5 animate-fade-in bg-ciab-bg-primary/30">
+              <div className="grid grid-cols-2 gap-1.5">
+                <div>
+                  <label className="text-[9px] font-mono uppercase tracking-wider text-ciab-text-muted mb-0.5 block">Branch</label>
+                  <input
+                    type="text"
+                    value={repo.branch ?? ""}
+                    onChange={(e) => {
+                      const updated = [...repos];
+                      updated[i] = { ...updated[i], branch: e.target.value || undefined };
+                      setRepos(updated);
+                    }}
+                    className="input w-full font-mono text-[11px] py-1"
+                    placeholder="main"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-mono uppercase tracking-wider text-ciab-text-muted mb-0.5 block">Dest path</label>
+                  <input
+                    type="text"
+                    value={repo.dest_path ?? ""}
+                    onChange={(e) => {
+                      const updated = [...repos];
+                      updated[i] = { ...updated[i], dest_path: e.target.value || undefined };
+                      setRepos(updated);
+                    }}
+                    className="input w-full font-mono text-[11px] py-1"
+                    placeholder="/workspace/app"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <div>
+                  <label className="text-[9px] font-mono uppercase tracking-wider text-ciab-text-muted mb-0.5 block">Strategy</label>
+                  <select
+                    value={repo.strategy ?? "clone"}
+                    onChange={(e) => {
+                      const updated = [...repos];
+                      updated[i] = { ...updated[i], strategy: e.target.value as "clone" | "worktree" };
+                      setRepos(updated);
+                    }}
+                    className="input w-full text-[11px] py-1"
+                  >
+                    <option value="clone">clone</option>
+                    <option value="worktree">worktree</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[9px] font-mono uppercase tracking-wider text-ciab-text-muted mb-0.5 block">Depth</label>
+                  <select
+                    value={repo.depth ?? 1}
+                    onChange={(e) => {
+                      const updated = [...repos];
+                      updated[i] = { ...updated[i], depth: Number(e.target.value) };
+                      setRepos(updated);
+                    }}
+                    className="input w-full text-[11px] py-1"
+                  >
+                    <option value={1}>1 (shallow)</option>
+                    <option value={10}>10</option>
+                    <option value={50}>50</option>
+                    <option value={0}>Full history</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Add buttons */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() =>
+            setRepos([...repos, { url: "", branch: "main", dest_path: "/workspace/app", strategy: "clone", depth: 1 }])
+          }
+          className="text-[11px] text-ciab-text-muted hover:text-ciab-copper transition-colors flex items-center gap-1"
+        >
+          <Plus className="w-3 h-3" /> Add repository
+        </button>
+
+        {ghChecked && (
+          <>
+            <span className="text-ciab-border text-[10px]">·</span>
+            {ghAvailable ? (
+              <button
+                onClick={() => {
+                  setShowGhPicker(!showGhPicker);
+                  if (!showGhPicker) searchRepos("");
+                }}
+                className="text-[11px] text-ciab-text-muted hover:text-ciab-copper transition-colors flex items-center gap-1"
+              >
+                <Github className="w-3 h-3" /> Pick from GitHub
+              </button>
+            ) : (
+              <span className="text-[11px] text-ciab-text-muted/50 flex items-center gap-1">
+                <Github className="w-3 h-3" />
+                <span>
+                  GitHub not connected —{" "}
+                  <a href="/settings" className="underline text-ciab-copper/70 hover:text-ciab-copper">
+                    connect in Settings
+                  </a>
+                </span>
+              </span>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* GitHub repo picker panel */}
+      {showGhPicker && ghAvailable && (
+        <div className="border border-ciab-border rounded-md overflow-hidden animate-fade-in">
+          <div className="px-2 py-1.5 border-b border-ciab-border/50 bg-ciab-bg-primary/40 flex items-center gap-2">
+            <Search className="w-3 h-3 text-ciab-text-muted flex-shrink-0" />
+            <input
+              type="text"
+              value={ghSearch}
+              onChange={(e) => setGhSearch(e.target.value)}
+              placeholder="Search GitHub repos…"
+              className="flex-1 bg-transparent text-xs outline-none text-ciab-text-primary placeholder:text-ciab-text-muted"
+              autoFocus
+            />
+            {ghLoading && <Loader2 className="w-3 h-3 text-ciab-text-muted animate-spin flex-shrink-0" />}
+          </div>
+          <div className="max-h-48 overflow-y-auto">
+            {ghError && (
+              <p className="text-[10px] text-state-failed px-3 py-2">{ghError}</p>
+            )}
+            {!ghLoading && ghRepos.length === 0 && !ghError && (
+              <p className="text-[10px] text-ciab-text-muted px-3 py-2 text-center">No repos found</p>
+            )}
+            {ghRepos.map((repo) => {
+              const alreadyAdded = repos.some((r) => r.url === repo.url);
+              return (
+                <button
+                  key={repo.fullName}
+                  onClick={() => handleSelectGhRepo(repo)}
+                  disabled={alreadyAdded}
+                  className="w-full flex items-start gap-2.5 px-3 py-2 hover:bg-ciab-bg-hover/30 transition-colors text-left border-b border-ciab-border/30 last:border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {repo.isPrivate ? (
+                    <Lock className="w-3 h-3 text-ciab-text-muted flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <Globe className="w-3 h-3 text-ciab-text-muted flex-shrink-0 mt-0.5" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-medium truncate">{repo.fullName}</span>
+                      <span className={`text-[9px] font-mono px-1 py-0.5 rounded ${
+                        repo.isPrivate
+                          ? "bg-ciab-bg-hover text-ciab-text-muted"
+                          : "bg-ciab-copper/10 text-ciab-copper"
+                      }`}>
+                        {repo.isPrivate ? "private" : "public"}
+                      </span>
+                      {alreadyAdded && (
+                        <span className="text-[9px] font-mono text-ciab-text-muted">added</span>
+                      )}
+                    </div>
+                    {repo.description && (
+                      <p className="text-[10px] text-ciab-text-muted truncate mt-0.5">{repo.description}</p>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// WorkspaceModelPicker
+// ---------------------------------------------------------------------------
+
 function WorkspaceModelPicker({
   provider,
   llmProviders,
@@ -633,6 +912,10 @@ function WorkspaceModelPicker({
     />
   );
 }
+
+// ---------------------------------------------------------------------------
+// CollapsibleSection
+// ---------------------------------------------------------------------------
 
 function CollapsibleSection({
   title,

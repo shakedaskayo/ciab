@@ -23,6 +23,8 @@ pub enum RuntimeBackend {
     OpenSandbox,
     /// Run agents in Docker containers
     Docker,
+    /// Run agents in Kubernetes Pods
+    Kubernetes,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,6 +35,18 @@ pub struct WorkspaceRuntimeConfig {
     /// Override working directory for local backend
     #[serde(default)]
     pub local_workdir: Option<String>,
+    /// Per-workspace Kubernetes namespace override
+    #[serde(default)]
+    pub kubernetes_namespace: Option<String>,
+    /// Per-workspace RuntimeClass override (microvm, e.g. "kata-containers")
+    #[serde(default)]
+    pub kubernetes_runtime_class: Option<String>,
+    /// Per-workspace node selector override
+    #[serde(default)]
+    pub kubernetes_node_selector: Option<std::collections::HashMap<String, String>>,
+    /// Per-workspace container image override for K8s
+    #[serde(default)]
+    pub kubernetes_image: Option<String>,
 }
 
 impl Default for WorkspaceRuntimeConfig {
@@ -40,6 +54,10 @@ impl Default for WorkspaceRuntimeConfig {
         Self {
             backend: RuntimeBackend::Default,
             local_workdir: None,
+            kubernetes_namespace: None,
+            kubernetes_runtime_class: None,
+            kubernetes_node_selector: None,
+            kubernetes_image: None,
         }
     }
 }

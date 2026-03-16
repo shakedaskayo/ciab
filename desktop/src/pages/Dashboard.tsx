@@ -174,13 +174,9 @@ export default function Dashboard() {
       {showDialog && (
         <CreateSandboxDialog
           onClose={() => setShowDialog(false)}
-          onCreate={(spec) => {
-            createSandbox.mutate(spec, {
-              onSuccess: () => {
-                setShowDialog(false);
-                navigate("/sandboxes");
-              },
-            });
+          onSuccess={() => {
+            setShowDialog(false);
+            navigate("/sandboxes");
           }}
         />
       )}

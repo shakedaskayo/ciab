@@ -116,3 +116,12 @@ export function useCompatibility() {
     staleTime: 60000,
   });
 }
+
+export function useClaudeHostAuth() {
+  return useQuery({
+    queryKey: ["claude-host-auth"],
+    queryFn: () => llmProviders.claudeHostAuth(),
+    staleTime: 60000,
+    refetchInterval: 300000, // re-check every 5 minutes
+  });
+}

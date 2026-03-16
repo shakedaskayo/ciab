@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { workspaces } from "@/lib/api/endpoints";
-import type { CreateWorkspaceRequest, UpdateWorkspaceRequest } from "@/lib/api/types";
+import type { CreateWorkspaceRequest, UpdateWorkspaceRequest, WorkspaceSpec } from "@/lib/api/types";
 import { toast } from "sonner";
 
 export function useWorkspaces(name?: string) {
@@ -65,7 +65,8 @@ export function useDeleteWorkspace() {
 export function useLaunchWorkspace() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => workspaces.launch(id),
+    mutationFn: ({ id, spec_overrides }: { id: string; spec_overrides?: Partial<WorkspaceSpec> }) =>
+      workspaces.launch(id, spec_overrides),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sandboxes"] });
       toast.success("Workspace launched — sandbox provisioning started");

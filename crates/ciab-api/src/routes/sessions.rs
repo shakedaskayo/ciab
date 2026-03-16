@@ -7,6 +7,7 @@ use axum::response::IntoResponse;
 use axum::Json;
 use chrono::Utc;
 use ciab_core::error::CiabError;
+use ciab_core::types::llm_provider::LlmProviderKind;
 use ciab_core::types::sandbox::ExecRequest;
 use ciab_core::types::session::{Message, MessageContent, MessageRole, Session, SessionState};
 use ciab_core::types::stream::{StreamEvent, StreamEventType};
@@ -338,6 +339,132 @@ async fn process_queued_message(
                 ..Default::default()
             });
 
+    // Per-session model/provider override stored in metadata at creation time.
+    if let Some(model) = session.metadata.get("model_override").and_then(|v| v.as_str()) {
+        if !model.is_empty() {
+            config.model = Some(model.to_string());
+        }
+    }
+    // Resolve LLM provider override: look up the provider from the DB and inject
+    // llm_base_url + llm_api_key into config.extra so the agent provider can set
+    // the correct env vars (e.g. ANTHROPIC_BASE_URL for Ollama).
+    let effective_provider_id = session
+        .metadata
+        .get("llm_provider_id_override")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .or_else(|| {
+            config
+                .extra
+                .get("llm_provider_id")
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+        })
+        .and_then(|s| Uuid::parse_str(s).ok());
+
+    if let Some(provider_uuid) = effective_provider_id {
+        match state.db.get_llm_provider(&provider_uuid).await {
+            Ok(Some(provider)) => {
+                let kind = &provider.kind;
+                let base_url = provider
+                    .base_url
+                    .clone()
+                    .unwrap_or_else(|| "http://localhost:11434".to_string());
+
+                // Emit a log event so the sandbox log shows which LLM provider is active.
+                let log_event = StreamEvent {
+                    id: format!("llm-provider-{}", Uuid::new_v4()),
+                    sandbox_id: sandbox.id,
+                    session_id: Some(sid),
+                    event_type: StreamEventType::LogLine,
+                    data: json!({
+                        "line": format!(
+                            "[ciab] LLM provider override: {} ({:?}) @ {}",
+                            provider.name, kind, base_url
+                        ),
+                        "stream": "stderr"
+                    }),
+                    timestamp: Utc::now(),
+                };
+                let _ = state.stream_handler.publish(log_event).await;
+
+                match kind {
+                    LlmProviderKind::Ollama => {
+                        // Ollama uses its Anthropic-compatible API at the root URL (no /v1).
+                        // ANTHROPIC_AUTH_TOKEN must be set; ANTHROPIC_API_KEY is cleared.
+                        config.extra.insert(
+                            "llm_base_url".to_string(),
+                            serde_json::Value::String(base_url.clone()),
+                        );
+                        config.extra.insert(
+                            "llm_auth_token".to_string(),
+                            serde_json::Value::String("ollama".to_string()),
+                        );
+                        // Signal that ANTHROPIC_API_KEY validation should be skipped.
+                        config.extra.insert(
+                            "llm_skip_api_key".to_string(),
+                            serde_json::Value::Bool(true),
+                        );
+
+                        // Validate Ollama connectivity and emit a log event.
+                        let ollama_version_url = format!("{}/api/version", base_url.trim_end_matches('/'));
+                        let http = reqwest::Client::builder()
+                            .timeout(std::time::Duration::from_secs(5))
+                            .build()
+                            .unwrap_or_default();
+                        let connectivity_line = match http.get(&ollama_version_url).send().await {
+                            Ok(resp) if resp.status().is_success() => {
+                                let version = resp
+                                    .json::<serde_json::Value>()
+                                    .await
+                                    .ok()
+                                    .and_then(|v| v.get("version").and_then(|v| v.as_str()).map(|s| s.to_string()))
+                                    .unwrap_or_else(|| "unknown".to_string());
+                                format!("[ciab] Ollama connected — version {version} @ {base_url}")
+                            }
+                            Ok(resp) => {
+                                format!("[ciab] Ollama reachable but returned HTTP {} @ {base_url}", resp.status())
+                            }
+                            Err(e) => {
+                                format!("[ciab] WARNING: Ollama not reachable @ {base_url} — {e}. Agent will likely fail.")
+                            }
+                        };
+                        let conn_event = StreamEvent {
+                            id: format!("ollama-conn-{}", Uuid::new_v4()),
+                            sandbox_id: sandbox.id,
+                            session_id: Some(sid),
+                            event_type: StreamEventType::LogLine,
+                            data: json!({ "line": connectivity_line, "stream": "stderr" }),
+                            timestamp: Utc::now(),
+                        };
+                        let _ = state.stream_handler.publish(conn_event).await;
+                    }
+                    _ => {
+                        // For non-Ollama providers, inject base_url and api_key generically.
+                        if let Some(url) = &provider.base_url {
+                            config.extra.insert(
+                                "llm_base_url".to_string(),
+                                serde_json::Value::String(url.clone()),
+                            );
+                        }
+                        // API key will be resolved from credentials by the agent.
+                    }
+                }
+
+                config.extra.insert(
+                    "llm_provider_id".to_string(),
+                    serde_json::Value::String(provider_uuid.to_string()),
+                );
+            }
+            Ok(None) => {
+                tracing::warn!(provider_id = %provider_uuid, "LLM provider not found in DB, using default");
+            }
+            Err(e) => {
+                tracing::warn!(error = %e, "Failed to look up LLM provider, using default");
+            }
+        }
+    }
+
     if let Some(claude_sid) = session
         .metadata
         .get("claude_session_id")
@@ -378,6 +505,72 @@ async fn process_queued_message(
                 let skill_tool = "Skill".to_string();
                 if !config.allowed_tools.contains(&skill_tool) {
                     config.allowed_tools.push(skill_tool);
+                }
+            }
+        }
+    }
+
+    // For the claude-code provider in local mode: try to inherit the host's Claude
+    // subscription OAuth token so users don't need a separate API key configured.
+    // Only do this when no explicit LLM provider override is active.
+    if sandbox.agent_provider == "claude-code"
+        && !config.extra.contains_key("llm_base_url")
+        && !config.extra.contains_key("llm_api_key")
+        && !config.extra.contains_key("claude_oauth_token")
+    {
+        match read_host_claude_oauth_token() {
+            HostClaudeAuth::ValidToken { token, subscription_type, expires_in_secs } => {
+                config.extra.insert(
+                    "claude_oauth_token".to_string(),
+                    serde_json::Value::String(token),
+                );
+                let sub = subscription_type.as_deref().unwrap_or("unknown");
+                let log_line = if expires_in_secs < 600 {
+                    format!("[ciab] Inherited Claude {sub} subscription token (expires in {}m — consider re-logging in Claude Code)", expires_in_secs / 60)
+                } else {
+                    format!("[ciab] Inherited Claude {sub} subscription token (expires in {}h{}m)", expires_in_secs / 3600, (expires_in_secs % 3600) / 60)
+                };
+                let log_event = StreamEvent {
+                    id: format!("claude-auth-{}", Uuid::new_v4()),
+                    sandbox_id: sandbox.id,
+                    session_id: Some(sid),
+                    event_type: StreamEventType::LogLine,
+                    data: json!({ "line": log_line, "stream": "stderr" }),
+                    timestamp: Utc::now(),
+                };
+                let _ = state.stream_handler.publish(log_event).await;
+            }
+            HostClaudeAuth::Expired { subscription_type } => {
+                let sub = subscription_type.as_deref().unwrap_or("unknown");
+                let log_event = StreamEvent {
+                    id: format!("claude-auth-{}", Uuid::new_v4()),
+                    sandbox_id: sandbox.id,
+                    session_id: Some(sid),
+                    event_type: StreamEventType::LogLine,
+                    data: json!({
+                        "line": format!("[ciab] WARNING: Claude {sub} subscription token has expired. Run `claude` in a terminal and log in again, or add an ANTHROPIC_API_KEY provider in Settings."),
+                        "stream": "stderr"
+                    }),
+                    timestamp: Utc::now(),
+                };
+                let _ = state.stream_handler.publish(log_event).await;
+            }
+            HostClaudeAuth::NotFound => {
+                // Check if ANTHROPIC_API_KEY is set in the environment as a fallback.
+                let has_env_key = std::env::var("ANTHROPIC_API_KEY").map(|k| !k.is_empty()).unwrap_or(false);
+                if !has_env_key {
+                    let log_event = StreamEvent {
+                        id: format!("claude-auth-{}", Uuid::new_v4()),
+                        sandbox_id: sandbox.id,
+                        session_id: Some(sid),
+                        event_type: StreamEventType::LogLine,
+                        data: json!({
+                            "line": "[ciab] No Claude auth found. Log in via `claude` in a terminal (Claude subscription), or add an ANTHROPIC_API_KEY in Settings → LLM Providers.",
+                            "stream": "stderr"
+                        }),
+                        timestamp: Utc::now(),
+                    };
+                    let _ = state.stream_handler.publish(log_event).await;
                 }
             }
         }
@@ -1275,5 +1468,122 @@ async fn handle_local_command(
             "Unknown local command: /{}",
             cmd_name
         ))),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Host Claude OAuth token inheritance
+// ---------------------------------------------------------------------------
+
+enum HostClaudeAuth {
+    /// Valid token read from host keychain or credentials file.
+    ValidToken {
+        token: String,
+        subscription_type: Option<String>,
+        /// Seconds until the token expires.
+        expires_in_secs: i64,
+    },
+    /// Token found but already expired.
+    Expired {
+        subscription_type: Option<String>,
+    },
+    /// No credentials found on the host.
+    NotFound,
+}
+
+/// Try to read the Claude Code OAuth token from the local machine.
+///
+/// Claude Code stores credentials in two places (tried in order):
+/// 1. macOS Keychain — `security find-generic-password -s "Claude Code-credentials"`
+/// 2. ~/.claude/.credentials.json — plaintext fallback
+///
+/// The stored JSON is: `{ "claudeAiOauth": { "accessToken": "...", "expiresAt": <ms>, ... } }`
+///
+/// Claude Code accepts the token via `CLAUDE_CODE_OAUTH_TOKEN` env var.
+fn read_host_claude_oauth_token() -> HostClaudeAuth {
+    // 1. Try macOS Keychain
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(creds) = read_keychain_credentials() {
+            return parse_claude_credentials(&creds);
+        }
+    }
+
+    // 2. Try ~/.claude/.credentials.json (plaintext fallback, all platforms)
+    let credentials_path = {
+        let home = std::env::var("HOME").unwrap_or_else(|_| "~".to_string());
+        let config_dir = std::env::var("CLAUDE_CONFIG_DIR")
+            .unwrap_or_else(|_| format!("{}/.claude", home));
+        std::path::PathBuf::from(config_dir).join(".credentials.json")
+    };
+
+    if let Ok(raw) = std::fs::read_to_string(&credentials_path) {
+        if let Ok(value) = serde_json::from_str::<serde_json::Value>(&raw) {
+            return parse_claude_credentials(&value);
+        }
+    }
+
+    HostClaudeAuth::NotFound
+}
+
+#[cfg(target_os = "macos")]
+fn read_keychain_credentials() -> Option<serde_json::Value> {
+    // Claude Code uses: security find-generic-password -s "Claude Code-credentials" -w
+    // The account is the current user. No suffix when using default CLAUDE_CONFIG_DIR.
+    let service = "Claude Code-credentials";
+    let output = std::process::Command::new("security")
+        .args(["find-generic-password", "-s", service, "-w"])
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let raw = String::from_utf8(output.stdout).ok()?;
+    let raw = raw.trim();
+    if raw.is_empty() {
+        return None;
+    }
+
+    serde_json::from_str(raw).ok()
+}
+
+fn parse_claude_credentials(value: &serde_json::Value) -> HostClaudeAuth {
+    let oauth = match value.get("claudeAiOauth") {
+        Some(v) => v,
+        None => return HostClaudeAuth::NotFound,
+    };
+
+    let access_token = match oauth.get("accessToken").and_then(|v| v.as_str()) {
+        Some(t) if !t.is_empty() => t.to_string(),
+        _ => return HostClaudeAuth::NotFound,
+    };
+
+    let subscription_type = oauth
+        .get("subscriptionType")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    let expires_at_ms = oauth
+        .get("expiresAt")
+        .and_then(|v| v.as_i64())
+        .unwrap_or(0);
+
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0);
+
+    let expires_in_secs = (expires_at_ms - now_ms) / 1000;
+
+    if expires_at_ms > 0 && expires_in_secs <= 0 {
+        return HostClaudeAuth::Expired { subscription_type };
+    }
+
+    HostClaudeAuth::ValidToken {
+        token: access_token,
+        subscription_type,
+        expires_in_secs,
     }
 }

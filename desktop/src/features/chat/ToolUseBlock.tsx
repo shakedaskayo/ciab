@@ -13,6 +13,8 @@ import {
   Check,
   Loader2,
   ListTodo,
+  Bot,
+  Cpu,
 } from "lucide-react";
 import TodoListBlock, { parseTodoInput } from "./TodoListBlock";
 
@@ -35,6 +37,8 @@ const TOOL_ICONS: Record<string, typeof Terminal> = {
   WebFetch: Globe,
   WebSearch: Globe,
   TodoWrite: ListTodo,
+  Agent: Bot,
+  Task: Cpu,
 };
 
 const TOOL_COLORS: Record<string, string> = {
@@ -51,12 +55,14 @@ const TOOL_COLORS: Record<string, string> = {
 const TOOL_COLORS_MAP: Record<string, string> = {
   ...TOOL_COLORS,
   TodoWrite: "text-ciab-copper bg-ciab-copper/10 border-ciab-copper/20",
+  Agent: "text-violet-400 bg-violet-400/10 border-violet-400/20",
+  Task: "text-indigo-400 bg-indigo-400/10 border-indigo-400/20",
 };
 
 const DEFAULT_COLOR = "text-ciab-steel-blue bg-ciab-steel-blue/10 border-ciab-steel-blue/20";
 
 export default function ToolUseBlock({ name, input, toolId, isExecuting, permissionStatus, agentName }: Props) {
-  const [expanded, setExpanded] = useState(name === "TodoWrite");
+  const [expanded, setExpanded] = useState(name === "TodoWrite" || name === "Agent" || name === "Task");
   const [copied, setCopied] = useState(false);
   const Icon = TOOL_ICONS[name] ?? Terminal;
   const colorClass = TOOL_COLORS_MAP[name] ?? TOOL_COLORS[name] ?? DEFAULT_COLOR;
@@ -84,7 +90,7 @@ export default function ToolUseBlock({ name, input, toolId, isExecuting, permiss
       >
         {/* Execution indicator */}
         {isExecuting ? (
-          <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0 text-ciab-copper" />
+          <Loader2 className={`w-3.5 h-3.5 animate-spin flex-shrink-0 ${colorClass.split(" ")[0]}`} />
         ) : expanded ? (
           <ChevronDown className="w-3 h-3 text-ciab-text-muted flex-shrink-0" />
         ) : (
@@ -138,7 +144,7 @@ export default function ToolUseBlock({ name, input, toolId, isExecuting, permiss
 
       {expanded && (
         <div className="border-t border-inherit animate-fade-in">
-          {/* Tool-specific formatted view */}
+          {/* Bash */}
           {name === "Bash" && typeof inputObj.command === "string" && (
             <div className="px-3 py-2 bg-ciab-bg-primary/50">
               <div className="flex items-center gap-1.5 mb-1.5">
@@ -158,7 +164,12 @@ export default function ToolUseBlock({ name, input, toolId, isExecuting, permiss
             </div>
           )}
 
-          {name !== "Bash" && name !== "TodoWrite" && (
+          {/* Agent / Task — structured subagent view */}
+          {(name === "Agent" || name === "Task") && (
+            <AgentToolBody input={inputObj} isExecuting={isExecuting} />
+          )}
+
+          {name !== "Bash" && name !== "TodoWrite" && name !== "Agent" && name !== "Task" && (
             <div className="px-3 py-2 bg-ciab-bg-primary/50 relative group/input">
               <button
                 onClick={handleCopy}
@@ -176,6 +187,73 @@ export default function ToolUseBlock({ name, input, toolId, isExecuting, permiss
               </pre>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Subagent/Agent tool expanded body ─── */
+
+function AgentToolBody({
+  input,
+  isExecuting,
+}: {
+  input: Record<string, unknown>;
+  isExecuting?: boolean;
+}) {
+  const description = typeof input.description === "string" ? input.description : null;
+  const subagentType = typeof input.subagent_type === "string" ? input.subagent_type : null;
+  const prompt = typeof input.prompt === "string" ? input.prompt : null;
+  const [promptExpanded, setPromptExpanded] = useState(false);
+
+  const promptPreview = prompt && prompt.length > 200 ? prompt.slice(0, 200) + "…" : prompt;
+
+  return (
+    <div className="px-3 py-2.5 bg-ciab-bg-primary/50 space-y-2.5">
+      {/* Header row: type badge + description */}
+      <div className="flex items-start gap-2 flex-wrap">
+        {subagentType && (
+          <span className="text-[9px] font-mono font-semibold text-violet-300 bg-violet-500/15 border border-violet-500/20 px-2 py-0.5 rounded-full flex-shrink-0 uppercase tracking-wide">
+            {subagentType}
+          </span>
+        )}
+        {description && (
+          <span className="text-[11px] font-mono text-ciab-text-secondary leading-snug">
+            {description}
+          </span>
+        )}
+      </div>
+
+      {/* Prompt */}
+      {prompt && (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] font-mono text-ciab-text-muted/60 uppercase tracking-wide">prompt</span>
+            {isExecuting && (
+              <span className="flex items-center gap-1 text-[9px] font-mono text-violet-400/70">
+                <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                running
+              </span>
+            )}
+          </div>
+          <div
+            className="rounded-lg border border-violet-500/10 bg-violet-500/[0.04] px-2.5 py-2 cursor-pointer hover:bg-violet-500/[0.07] transition-colors"
+            onClick={() => setPromptExpanded((p) => !p)}
+          >
+            <pre className="text-[11px] font-mono text-ciab-text-secondary/80 whitespace-pre-wrap leading-relaxed">
+              {promptExpanded ? prompt : promptPreview}
+            </pre>
+            {prompt.length > 200 && (
+              <button className="mt-1.5 text-[9px] font-mono text-violet-400/60 hover:text-violet-400 transition-colors flex items-center gap-1">
+                {promptExpanded ? (
+                  <><ChevronDown className="w-2.5 h-2.5" /> Show less</>
+                ) : (
+                  <><ChevronRight className="w-2.5 h-2.5" /> Show full prompt ({prompt.length} chars)</>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -223,6 +301,14 @@ function getSummary(
       if (!Array.isArray(todos)) return null;
       const done = todos.filter((t) => t.status === "completed").length;
       return `${done}/${todos.length} tasks`;
+    }
+    case "Agent":
+    case "Task": {
+      const desc = typeof input.description === "string" ? input.description : null;
+      const type = typeof input.subagent_type === "string" ? input.subagent_type : null;
+      if (desc) return desc.length > 60 ? desc.slice(0, 57) + "..." : desc;
+      if (type) return type;
+      return null;
     }
     default:
       return null;

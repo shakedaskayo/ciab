@@ -323,11 +323,42 @@ export interface StreamEvent {
 
 // --- Runtime ---
 
-export type RuntimeBackend = "default" | "local" | "opensandbox" | "docker";
+export type RuntimeBackend = "default" | "local" | "opensandbox" | "docker" | "kubernetes";
+
+export interface KubernetesToleration {
+  key: string;
+  operator: string;
+  value?: string;
+  effect?: string;
+}
+
+export interface KubernetesRuntimeConfig {
+  namespace?: string;
+  agent_image?: string;
+  /** RuntimeClass for microvm isolation (e.g. "kata-containers", "kata-qemu"). */
+  runtime_class?: string;
+  node_selector?: Record<string, string>;
+  tolerations?: KubernetesToleration[];
+  image_pull_secrets?: string[];
+  storage_class?: string;
+  workspace_pvc_size?: string;
+  service_account?: string;
+  create_network_policy?: boolean;
+  run_as_non_root?: boolean;
+  drop_all_capabilities?: boolean;
+  default_cpu_request?: string;
+  default_cpu_limit?: string;
+  default_memory_request?: string;
+  default_memory_limit?: string;
+}
 
 export interface WorkspaceRuntimeConfig {
   backend?: RuntimeBackend;
   local_workdir?: string;
+  kubernetes_namespace?: string;
+  kubernetes_runtime_class?: string;
+  kubernetes_node_selector?: Record<string, string>;
+  kubernetes_image?: string;
 }
 
 export type GitCloneStrategy = "clone" | "worktree";

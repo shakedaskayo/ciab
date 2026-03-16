@@ -56,6 +56,8 @@ import type {
   WorkspaceRuntimeConfig,
 } from "@/lib/api/types";
 import SkillsManager from "@/features/workspace/SkillsManager";
+import KubernetesRuntimePanel from "@/features/workspace/KubernetesRuntimePanel";
+import LaunchOverrideDialog from "@/features/workspace/LaunchOverrideDialog";
 import { formatRelativeTime } from "@/lib/utils/format";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { useDirectoryPicker } from "@/lib/hooks/use-directory-picker";
@@ -83,6 +85,7 @@ export default function WorkspaceDetail() {
   const launchWorkspace = useLaunchWorkspace();
   const updateWorkspace = useUpdateWorkspace();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [showLaunchOverride, setShowLaunchOverride] = useState(false);
 
   // Edit state — null means no edits pending
   const [editSpec, setEditSpec] = useState<WorkspaceSpec | null>(null);
@@ -185,7 +188,7 @@ export default function WorkspaceDetail() {
             </>
           )}
           <button
-            onClick={() => launchWorkspace.mutate(workspace.id)}
+            onClick={() => setShowLaunchOverride(true)}
             className="btn-primary flex items-center gap-2"
             disabled={launchWorkspace.isPending}
           >
@@ -288,6 +291,21 @@ export default function WorkspaceDetail() {
           <CredentialsTab spec={currentSpec} onSpecChange={updateSpec} />
         )}
       </div>
+
+      {/* Launch Override Dialog */}
+      {showLaunchOverride && workspace && (
+        <LaunchOverrideDialog
+          workspace={workspace}
+          onClose={() => setShowLaunchOverride(false)}
+          onLaunch={(overrides) => {
+            launchWorkspace.mutate(
+              { id: workspace.id, spec_overrides: Object.keys(overrides).length > 0 ? overrides : undefined },
+              { onSuccess: () => setShowLaunchOverride(false) }
+            );
+          }}
+          isPending={launchWorkspace.isPending}
+        />
+      )}
     </div>
   );
 }
@@ -600,6 +618,7 @@ function RuntimeTab({
     { value: "local", label: "Local", description: "Run agents as local processes" },
     { value: "opensandbox", label: "OpenSandbox", description: "Run in OpenSandbox containers" },
     { value: "docker", label: "Docker", description: "Run in Docker containers" },
+    { value: "kubernetes", label: "Kubernetes", description: "Run in Kubernetes Pods" },
   ];
 
   return (
@@ -609,7 +628,7 @@ function RuntimeTab({
         Choose how this workspace's sandboxes are executed. "Default" inherits from server config.toml.
       </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
         {backends.map((b) => (
           <button
             key={b.value}
@@ -645,6 +664,13 @@ function RuntimeTab({
             Override the base directory where local sandboxes are created
           </p>
         </div>
+      )}
+
+      {backend === "kubernetes" && (
+        <KubernetesRuntimePanel
+          config={runtime}
+          onChange={(updated) => updateRuntime(() => updated)}
+        />
       )}
     </div>
   );

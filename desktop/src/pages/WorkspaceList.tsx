@@ -257,7 +257,7 @@ export default function WorkspaceList() {
                   deleteWorkspace.mutate(ws.id);
                 }
               }}
-              onLaunch={() => launchWorkspace.mutate(ws.id)}
+              onLaunch={() => launchWorkspace.mutate({ id: ws.id })}
               isLaunching={launchWorkspace.isPending}
             />
           ))}
@@ -870,8 +870,8 @@ function ConfigureWorkspace({
           {/* Runtime */}
           <div>
             <label className="label">Runtime</label>
-            <div className="grid grid-cols-4 gap-1.5">
-              {(["default", "local", "opensandbox", "docker"] as RuntimeBackend[]).map((b) => (
+            <div className="grid grid-cols-5 gap-1.5">
+              {(["default", "local", "opensandbox", "docker", "kubernetes"] as RuntimeBackend[]).map((b) => (
                 <button
                   key={b}
                   onClick={() => setRuntimeBackend(b)}

@@ -1,0 +1,33 @@
+{{- if .Values.runtime.kubernetes.createNetworkPolicy }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ciab-agent-isolation
+  namespace: {{ .Values.runtime.kubernetes.namespace }}
+  labels:
+    {{- include "ciab.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      ciab/managed-by: ciab
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow CIAB server to reach agent Pods (for exec/logs)
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "ciab.selectorLabels" . | nindent 14 }}
+  egress:
+    # Allow DNS
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Allow HTTPS for API calls (Claude, OpenAI, etc.)
+    - ports:
+        - port: 443
+          protocol: TCP
+{{- end }}

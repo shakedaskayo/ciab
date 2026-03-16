@@ -19,6 +19,14 @@ timeout_secs = 3600
 backend = "local"
 # local_workdir = "/tmp/ciab-workspaces"  # override local backend workdir
 
+# --- Kubernetes runtime overrides ---
+# Override specific Kubernetes settings for this workspace (server [runtime.kubernetes] are the defaults)
+#
+# backend = "kubernetes"
+# kubernetes_namespace = "ciab-agents-prod"        # namespace override
+# kubernetes_runtime_class = "kata-containers"     # microVM isolation (overrides server default)
+# kubernetes_image = "ghcr.io/shakedaskayo/ciab-claude:v2.0.0"  # image override
+
 # --- Repositories ---
 # Git repositories to clone into the sandbox
 
@@ -139,6 +147,29 @@ enabled = false
 operation_logging = true       # Log filesystem operations
 
 # --- Agent ---
+# Provider options: "claude-code", "codex", "gemini", "cursor"
+# Model options:
+#   Anthropic:  claude-sonnet-4-20250514, claude-opus-4-20250514, ...
+#   OpenAI:     gpt-4o, o3, ...
+#   Ollama:     llama3.1, qwen2.5-coder:7b, deepseek-coder-v2, ...
+#               (any model available in your local Ollama — no API key needed)
+#
+# To use a local Ollama model, set the model name and point to your Ollama instance
+# via the llm_provider_id in extra (desktop UI), or set llm_base_url directly:
+#
+#   [workspace.agent]
+#   provider = "claude-code"
+#   model = "llama3.1"
+#   [workspace.agent.extra]
+#   llm_base_url = "http://localhost:11434"   # Ollama root URL — no /v1 suffix for claude-code
+#   # llm_auth_token and llm_skip_api_key are set automatically when using llm_provider_id
+#
+# Or use Codex (OpenAI-compatible) with Ollama:
+#   provider = "codex"
+#   model = "qwen2.5-coder:7b"
+#   [workspace.agent.extra]
+#   llm_base_url = "http://localhost:11434"
+#   llm_api_key = "ollama"
 
 [workspace.agent]
 provider = "claude-code"

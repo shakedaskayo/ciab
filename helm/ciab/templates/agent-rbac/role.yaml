@@ -1,0 +1,15 @@
+{{- if .Values.runtime.kubernetes.namespace }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ciab-agent
+  namespace: {{ .Values.runtime.kubernetes.namespace }}
+  labels:
+    {{- include "ciab.labels" . | nindent 4 }}
+    ciab/managed-by: ciab
+rules:
+  # Minimal permissions: agent Pods may only read their own namespace's Pod list
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+{{- end }}

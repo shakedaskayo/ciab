@@ -61,6 +61,10 @@ pub enum CiabError {
     RuntimeUnavailable(String),
     #[error("OpenSandbox error: {0}")]
     OpenSandboxError(String),
+    #[error("kubernetes error: {0}")]
+    KubernetesError(String),
+    #[error("kubernetes pod not found: {0}")]
+    KubernetesPodNotFound(String),
 
     // Provisioning errors
     #[error("provisioning failed: {0}")]
@@ -203,6 +207,8 @@ impl CiabError {
             Self::OAuthTokenExpired => "oauth_token_expired",
             Self::RuntimeUnavailable(_) => "runtime_unavailable",
             Self::OpenSandboxError(_) => "opensandbox_error",
+            Self::KubernetesError(_) => "kubernetes_error",
+            Self::KubernetesPodNotFound(_) => "kubernetes_pod_not_found",
             Self::ProvisioningFailed(_) => "provisioning_failed",
             Self::GitCloneFailed(_) => "git_clone_failed",
             Self::ScriptExecutionFailed(_) => "script_execution_failed",

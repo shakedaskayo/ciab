@@ -11,6 +11,7 @@
   <a href="https://github.com/shakedaskayo/ciab/releases/latest"><img src="https://img.shields.io/github/v/release/shakedaskayo/ciab?label=release&color=C4693D" alt="Release"></a>
   <a href="https://github.com/shakedaskayo/ciab/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-5B8CA8.svg" alt="License"></a>
   <a href="https://shakedaskayo.github.io/ciab"><img src="https://img.shields.io/badge/docs-shakedaskayo.github.io%2Fciab-C4693D" alt="Docs"></a>
+  <a href="https://github.com/shakedaskayo/ciab/stargazers"><img src="https://img.shields.io/github/stars/shakedaskayo/ciab?style=social" alt="GitHub Stars"></a>
 </p>
 
 <br>
@@ -113,7 +114,7 @@ ciab agent chat <sandbox-id> --message "Refactor the auth module" --stream
 | | What you get |
 |---|---|
 | **Multi-agent** | Run Claude Code, Codex, Gemini CLI, and Cursor side-by-side. Switch providers with one config change. |
-| **Isolated sandboxes** | Each agent gets its own workspace, env vars, credentials, and mounted repos. Local processes or containers. |
+| **Isolated sandboxes** | Each agent gets its own workspace, env vars, credentials, and mounted repos. Local processes, containers, or Kubernetes pods. |
 | **Real-time streaming** | Watch agent output as it happens — text deltas, tool use, provisioning steps, logs — all over SSE. |
 | **Access anywhere** | Open sandboxes from your phone, tablet, laptop, or CI pipeline. Built-in web gateway with QR codes, mDNS, and tunneling. |
 | **Workspaces** | Reusable, TOML-configurable environment definitions. Bundle repos, skills, pre-commands, binaries, and agent config. |
@@ -193,6 +194,7 @@ crates/
   ciab-core             Types, traits, errors (foundation)
   ciab-api              Axum REST API — 15 route groups
   ciab-sandbox          Runtime backends: local process, Docker, OpenSandbox
+  ciab-sandbox-k8s      Kubernetes runtime backend (Kata Containers support)
   ciab-streaming        SSE broker with event buffer and replay
   ciab-provisioning     9-step sandbox provisioning pipeline
   ciab-credentials      AES-256-GCM encrypted vault, OAuth2
@@ -250,6 +252,16 @@ make dev        # Server + desktop together
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full setup.
+
+<br>
+
+## Community
+
+- [GitHub Discussions](https://github.com/shakedaskayo/ciab/discussions) — questions, ideas, show & tell
+- [Issues](https://github.com/shakedaskayo/ciab/issues) — bugs and feature requests
+- [Contributing](CONTRIBUTING.md) — how to contribute
+
+If CIAB is useful to you, a ⭐ on GitHub helps others find it.
 
 <br>
 

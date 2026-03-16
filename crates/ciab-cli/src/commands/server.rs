@@ -56,11 +56,50 @@ pub async fn execute(command: ServerCommand) -> Result<()> {
                 runtimes.insert("opensandbox".to_string(), opensandbox_runtime);
             }
 
+            if app_config.runtime.backend == "kubernetes" || app_config.runtime.kubernetes.is_some() {
+                let kc = app_config.runtime.kubernetes.clone().unwrap_or_default();
+                let k8s_cfg = ciab_sandbox_k8s::KubernetesRuntimeConfig {
+                    kubeconfig: kc.kubeconfig,
+                    context: kc.context,
+                    namespace: kc.namespace,
+                    agent_image: kc.agent_image,
+                    runtime_class: kc.runtime_class,
+                    node_selector: kc.node_selector,
+                    tolerations: Vec::new(),
+                    image_pull_secrets: Vec::new(),
+                    storage_class: kc.storage_class,
+                    workspace_pvc_size: kc.workspace_pvc_size,
+                    service_account: kc.service_account,
+                    create_network_policy: kc.create_network_policy,
+                    run_as_non_root: kc.run_as_non_root,
+                    drop_all_capabilities: kc.drop_all_capabilities,
+                    default_cpu_request: kc.default_cpu_request,
+                    default_cpu_limit: kc.default_cpu_limit,
+                    default_memory_request: kc.default_memory_request,
+                    default_memory_limit: kc.default_memory_limit,
+                };
+                match ciab_sandbox_k8s::KubernetesRuntime::new(k8s_cfg).await {
+                    Ok(k8s_runtime) => {
+                        let k8s_runtime: Arc<dyn ciab_core::traits::runtime::SandboxRuntime> =
+                            Arc::new(k8s_runtime);
+                        runtimes.insert("kubernetes".to_string(), k8s_runtime);
+                        tracing::info!("Kubernetes runtime initialized");
+                    }
+                    Err(e) => {
+                        tracing::warn!(error = %e, "failed to initialize Kubernetes runtime");
+                    }
+                }
+            }
+
             // Select default runtime from config
             let runtime: Arc<dyn ciab_core::traits::runtime::SandboxRuntime> =
                 match app_config.runtime.backend.as_str() {
                     "opensandbox" => runtimes
                         .get("opensandbox")
+                        .cloned()
+                        .unwrap_or(local_runtime),
+                    "kubernetes" => runtimes
+                        .get("kubernetes")
                         .cloned()
                         .unwrap_or(local_runtime),
                     _ => runtimes.get("local").cloned().unwrap(),

@@ -1,0 +1,126 @@
+## CIAB Helm Chart values
+## See Chart.yaml for version information.
+
+## Number of CIAB server replicas
+replicaCount: 1
+
+image:
+  repository: ghcr.io/shakedaskayo/ciab
+  tag: latest
+  pullPolicy: IfNotPresent
+
+## Image pull secrets for the CIAB server image
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+## CIAB server service
+service:
+  type: ClusterIP
+  port: 9090
+
+## Ingress for external access
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: ciab.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+## Resource limits for the CIAB server Pod
+resources:
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+## Node selector for the CIAB server Pod
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+## PodDisruptionBudget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+## Persistence for the CIAB SQLite database
+persistence:
+  enabled: true
+  storageClass: ""
+  size: 5Gi
+  accessMode: ReadWriteOnce
+
+## CIAB runtime configuration
+runtime:
+  ## Backend: "kubernetes" when deploying CIAB on K8s
+  backend: kubernetes
+
+  ## Kubernetes runtime backend settings
+  kubernetes:
+    ## Namespace where agent Pods will be created
+    namespace: ciab-agents
+    ## Default agent container image
+    agentImage: ghcr.io/shakedaskayo/ciab-claude:latest
+    ## RuntimeClass for microvm isolation.
+    ## Set to "kata-containers" or "kata-qemu" for Kata Containers.
+    ## Leave empty to use the cluster default container runtime.
+    runtimeClass: ""
+    ## Storage class for workspace PVCs
+    storageClass: standard
+    ## PVC size per workspace
+    workspacePvcSize: 10Gi
+    ## Create NetworkPolicy to isolate agent Pods
+    createNetworkPolicy: true
+    ## Run agent containers as non-root
+    runAsNonRoot: true
+    ## Drop all Linux capabilities from agent containers
+    dropAllCapabilities: true
+    ## Node selector for agent Pods (schedule on dedicated nodes)
+    nodeSelector: {}
+    ## Tolerations for agent Pods (tainted nodes)
+    tolerations: []
+    ## Resource defaults for agent Pods
+    defaultCpuRequest: "500m"
+    defaultCpuLimit: "2"
+    defaultMemoryRequest: "256Mi"
+    defaultMemoryLimit: "2Gi"
+
+## Agent provider configuration
+agents:
+  defaultProvider: claude-code
+  providers:
+    claude-code:
+      enabled: true
+      image: ghcr.io/shakedaskayo/ciab-claude:latest
+    codex:
+      enabled: false
+      image: ghcr.io/shakedaskayo/ciab-codex:latest
+    gemini:
+      enabled: false
+      image: ghcr.io/shakedaskayo/ciab-gemini:latest
+
+## Secrets (use external secret management in production)
+secrets:
+  ## Encryption key for credential store (base64-encoded 32-byte key)
+  ## Generate with: openssl rand -hex 32
+  encryptionKey: ""
+  ## API keys for agent providers (injected as env vars into agent Pods)
+  anthropicApiKey: ""
+  openaiApiKey: ""
+
+## Gateway configuration
+gateway:
+  enabled: false
+  tunnelProvider: bore
+
+## Security: API keys for the CIAB REST API (empty = no auth)
+security:
+  apiKeys: []

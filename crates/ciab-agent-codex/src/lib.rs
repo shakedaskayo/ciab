@@ -353,6 +353,22 @@ impl AgentProvider for CodexProvider {
                 supports_model_override: true,
                 notes: Some("Via OPENAI_BASE_URL override".to_string()),
             },
+            // Ollama: Codex uses the OpenAI-compatible endpoint via OPENAI_BASE_URL.
+            AgentLlmCompatibility {
+                agent_provider: "codex".to_string(),
+                llm_provider_kind: LlmProviderKind::Ollama,
+                env_var_mapping: [
+                    (
+                        "OPENAI_BASE_URL".to_string(),
+                        "{base_url}/v1".to_string(),
+                    ),
+                    ("OPENAI_API_KEY".to_string(), "ollama".to_string()),
+                ]
+                .into_iter()
+                .collect(),
+                supports_model_override: true,
+                notes: Some("Via OPENAI_BASE_URL → Ollama OpenAI-compatible endpoint".to_string()),
+            },
         ]
     }
 }

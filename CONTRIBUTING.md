@@ -84,3 +84,11 @@ See the [Custom Provider](https://shakedzy.github.io/ciab/agent-providers/custom
 
 - Use [GitHub Issues](https://github.com/shakedaskayo/ciab/issues) for bug reports and feature requests
 - Include your OS, Rust version, and steps to reproduce
+
+## Good First Issues
+
+Look for issues tagged [`good first issue`](https://github.com/shakedaskayo/ciab/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — these are intentionally scoped for newcomers. Drop a comment on the issue before you start so we can coordinate.
+
+## Discussions
+
+For questions, ideas, or design discussions that don't fit a bug report or feature request, use [GitHub Discussions](https://github.com/shakedaskayo/ciab/discussions).

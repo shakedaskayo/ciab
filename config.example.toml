@@ -13,6 +13,7 @@ cors_origins = ["*"]
 #   "local"       — Run agents as local processes (no containers needed)
 #   "docker"      — Run agents in Docker containers
 #   "opensandbox" — Run agents in OpenSandbox containers
+#   "kubernetes"  — Run agents as Kubernetes Pods
 
 [runtime]
 backend = "local"
@@ -27,6 +28,44 @@ backend = "local"
 # backend = "opensandbox"
 # opensandbox_url = "http://localhost:8000"
 # opensandbox_api_key = "${OPENSANDBOX_API_KEY}"
+
+# For Kubernetes backend:
+# backend = "kubernetes"
+#
+# [runtime.kubernetes]
+# namespace = "ciab-agents"              # Namespace for agent Pods
+# agent_image = "ghcr.io/shakedaskayo/ciab-claude:latest"
+#
+# # microVM / Kata Containers integration:
+# # Set to a registered RuntimeClass name (e.g. "kata-containers", "kata-qemu").
+# # The cluster operator must install Kata Containers and register the RuntimeClass.
+# # runtime_class = "kata-containers"
+#
+# # Storage
+# storage_class = "standard"
+# workspace_pvc_size = "10Gi"
+#
+# # Service account for agent Pods (created automatically if not set)
+# # service_account = "ciab-agent"
+#
+# # Security (all default to true — recommended for production)
+# create_network_policy = true
+# run_as_non_root = true
+# drop_all_capabilities = true
+#
+# # Resource defaults
+# # default_cpu_request = "500m"
+# # default_cpu_limit = "2"
+# # default_memory_request = "256Mi"
+# # default_memory_limit = "2Gi"
+#
+# # Node scheduling (for dedicated agent nodes)
+# # [runtime.kubernetes.node_selector]
+# # "ciab/agent-node" = "true"
+#
+# # Kubeconfig (omit to use in-cluster config)
+# # kubeconfig = "/home/user/.kube/config"
+# # context = "my-cluster"
 
 # --- Agent Providers ---
 
@@ -167,7 +206,10 @@ format = "json"
 # Providers configured here are seeded into the database on first startup.
 
 [llm_providers]
-auto_detect_ollama = true   # Auto-detect local Ollama on startup
+# Auto-detect Ollama on startup (checks http://localhost:11434).
+# When detected, CIAB registers it as an LLM provider and lists its pulled models.
+# Use auto-detected Ollama models directly in any workspace/sandbox.
+auto_detect_ollama = true
 
 # Example: seed an Anthropic provider from environment
 # [llm_providers.providers.anthropic]
@@ -187,11 +229,16 @@ auto_detect_ollama = true   # Auto-detect local Ollama on startup
 # api_key_env = "OPENROUTER_API_KEY"
 # base_url = "https://openrouter.ai/api/v1"
 
-# Example: Local Ollama with explicit base URL
+# Example: Local Ollama (explicit — or let auto_detect_ollama do this automatically)
+# Ollama's Anthropic-compatible API is used by claude-code:
+#   - claude-code  →  ANTHROPIC_BASE_URL=http://localhost:11434 (no /v1 suffix)
+#                     ANTHROPIC_AUTH_TOKEN=ollama, ANTHROPIC_API_KEY=""
+#   - codex        →  OPENAI_BASE_URL=http://localhost:11434/v1
+# Pull models with: ollama pull llama3.1  or via the desktop UI (Settings → LLM Providers)
 # [llm_providers.providers.ollama-local]
 # kind = "ollama"
 # base_url = "http://localhost:11434"
-# default_model = "llama3:8b"
+# default_model = "llama3.1"
 
 # --- OAuth ---
 

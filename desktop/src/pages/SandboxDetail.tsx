@@ -209,7 +209,7 @@ export default function SandboxDetail() {
 
       {/* Tab content */}
       <div className="flex-1 min-h-0">
-        {activeTab === "chat" && <ChatView sandboxId={sandbox.id} agentProvider={sandbox.agent_provider} />}
+        {activeTab === "chat" && <ChatView sandboxId={sandbox.id} agentProvider={sandbox.agent_provider} agentConfig={sandbox.spec.agent_config} />}
         {activeTab === "terminal" && <TerminalView sandboxId={sandbox.id} />}
         {activeTab === "files" && <FileBrowser sandboxId={sandbox.id} />}
         {activeTab === "logs" && <LogViewer sandboxId={sandbox.id} />}

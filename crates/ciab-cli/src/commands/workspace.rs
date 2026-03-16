@@ -16,6 +16,10 @@ pub async fn execute(
             description,
             provider,
             from_toml,
+            runtime_backend,
+            k8s_namespace,
+            k8s_runtime_class,
+            k8s_image,
         } => {
             if let Some(toml_path) = from_toml {
                 let content = std::fs::read_to_string(&toml_path)?;
@@ -25,6 +29,35 @@ pub async fn execute(
                 let mut spec = serde_json::json!({});
                 if let Some(p) = provider {
                     spec["agent"] = serde_json::json!({"provider": p});
+                }
+
+                // Build runtime config if any K8s flags or backend specified
+                if runtime_backend.is_some()
+                    || k8s_namespace.is_some()
+                    || k8s_runtime_class.is_some()
+                    || k8s_image.is_some()
+                {
+                    let mut rt = serde_json::json!({});
+                    if let Some(ref b) = runtime_backend {
+                        rt["backend"] = serde_json::Value::String(b.clone());
+                    }
+                    if k8s_namespace.is_some()
+                        || k8s_runtime_class.is_some()
+                        || k8s_image.is_some()
+                    {
+                        let mut k8s = serde_json::json!({});
+                        if let Some(ns) = k8s_namespace {
+                            k8s["kubernetes_namespace"] = serde_json::Value::String(ns);
+                        }
+                        if let Some(rc) = k8s_runtime_class {
+                            k8s["kubernetes_runtime_class"] = serde_json::Value::String(rc);
+                        }
+                        if let Some(img) = k8s_image {
+                            k8s["kubernetes_image"] = serde_json::Value::String(img);
+                        }
+                        rt.as_object_mut().unwrap().extend(k8s.as_object().unwrap().clone());
+                    }
+                    spec["runtime"] = rt;
                 }
 
                 let body = serde_json::json!({

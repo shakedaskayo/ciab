@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import type { LlmProvider, LlmProviderKind, CreateLlmProviderRequest, UpdateLlmProviderRequest } from "@/lib/api/types";
 import { useCreateLlmProvider, useUpdateLlmProvider } from "@/lib/hooks/use-llm-providers";
+import LlmProviderIcon from "@/components/shared/LlmProviderIcon";
 
 const KINDS: { value: LlmProviderKind; label: string }[] = [
   { value: "anthropic", label: "Anthropic" },
@@ -94,12 +95,13 @@ export default function LlmProviderDialog({ provider, onClose }: Props) {
                 <button
                   key={k.value}
                   onClick={() => setKind(k.value)}
-                  className={`p-2 rounded-md border text-[11px] font-medium transition-all ${
+                  className={`flex items-center gap-1.5 p-2 rounded-md border text-[11px] font-medium transition-all ${
                     kind === k.value
                       ? "border-ciab-copper/50 bg-ciab-copper/5"
                       : "border-ciab-border hover:border-ciab-border-light"
                   }`}
                 >
+                  <LlmProviderIcon kind={k.value} size={13} />
                   {k.label}
                 </button>
               ))}

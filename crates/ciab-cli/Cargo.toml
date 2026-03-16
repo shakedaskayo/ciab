@@ -12,6 +12,7 @@ ciab-core = { workspace = true }
 ciab-api = { workspace = true }
 ciab-db = { workspace = true }
 ciab-sandbox = { workspace = true }
+ciab-sandbox-k8s = { workspace = true }
 ciab-streaming = { workspace = true }
 ciab-credentials = { workspace = true }
 ciab-provisioning = { workspace = true }

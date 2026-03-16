@@ -6,8 +6,10 @@ CIAB can be deployed as a standalone binary or via Docker.
 
 | Method | Best For |
 |--------|----------|
-| [Docker](docker.md) | Production deployments, CI/CD |
 | [Binary](../getting-started/installation.md) | Development, simple setups |
+| [Docker](docker.md) | Containerized deployments, CI/CD |
+| [Kubernetes](kubernetes.md) | Production clusters, Kata Containers microVM isolation |
+| [OpenSandbox](opensandbox.md) | Managed sandbox containers |
 
 ## Requirements
 
