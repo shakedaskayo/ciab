@@ -358,10 +358,7 @@ impl AgentProvider for CodexProvider {
                 agent_provider: "codex".to_string(),
                 llm_provider_kind: LlmProviderKind::Ollama,
                 env_var_mapping: [
-                    (
-                        "OPENAI_BASE_URL".to_string(),
-                        "{base_url}/v1".to_string(),
-                    ),
+                    ("OPENAI_BASE_URL".to_string(), "{base_url}/v1".to_string()),
                     ("OPENAI_API_KEY".to_string(), "ollama".to_string()),
                 ]
                 .into_iter()

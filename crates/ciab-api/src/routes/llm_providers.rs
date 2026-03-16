@@ -428,8 +428,8 @@ fn check_host_claude_auth() -> HostClaudeAuthStatus {
     // Try ~/.claude/.credentials.json
     let credentials_path = {
         let home = std::env::var("HOME").unwrap_or_else(|_| "~".to_string());
-        let config_dir = std::env::var("CLAUDE_CONFIG_DIR")
-            .unwrap_or_else(|_| format!("{}/.claude", home));
+        let config_dir =
+            std::env::var("CLAUDE_CONFIG_DIR").unwrap_or_else(|_| format!("{}/.claude", home));
         std::path::PathBuf::from(config_dir).join(".credentials.json")
     };
 
@@ -440,7 +440,10 @@ fn check_host_claude_auth() -> HostClaudeAuthStatus {
     }
 
     // Check ANTHROPIC_API_KEY as fallback
-    if std::env::var("ANTHROPIC_API_KEY").map(|k| !k.is_empty()).unwrap_or(false) {
+    if std::env::var("ANTHROPIC_API_KEY")
+        .map(|k| !k.is_empty())
+        .unwrap_or(false)
+    {
         return HostClaudeAuthStatus {
             found: true,
             expired: false,
@@ -462,7 +465,12 @@ fn check_host_claude_auth() -> HostClaudeAuthStatus {
 #[cfg(target_os = "macos")]
 fn read_keychain_credentials_for_status() -> Option<serde_json::Value> {
     let output = std::process::Command::new("security")
-        .args(["find-generic-password", "-s", "Claude Code-credentials", "-w"])
+        .args([
+            "find-generic-password",
+            "-s",
+            "Claude Code-credentials",
+            "-w",
+        ])
         .output()
         .ok()?;
     if !output.status.success() {
@@ -479,16 +487,19 @@ fn read_keychain_credentials_for_status() -> Option<serde_json::Value> {
 fn parse_credentials_status(value: &serde_json::Value) -> HostClaudeAuthStatus {
     let oauth = match value.get("claudeAiOauth") {
         Some(v) => v,
-        None => return HostClaudeAuthStatus {
-            found: false,
-            expired: false,
-            subscription_type: None,
-            expires_in_secs: None,
-            message: "Credential file found but no OAuth data present.".to_string(),
-        },
+        None => {
+            return HostClaudeAuthStatus {
+                found: false,
+                expired: false,
+                subscription_type: None,
+                expires_in_secs: None,
+                message: "Credential file found but no OAuth data present.".to_string(),
+            }
+        }
     };
 
-    let has_token = oauth.get("accessToken")
+    let has_token = oauth
+        .get("accessToken")
         .and_then(|v| v.as_str())
         .map(|s| !s.is_empty())
         .unwrap_or(false);
@@ -523,7 +534,9 @@ fn parse_credentials_status(value: &serde_json::Value) -> HostClaudeAuthStatus {
     let sub = subscription_type.as_deref().unwrap_or("unknown");
 
     let message = if expired {
-        format!("Claude {sub} subscription token has expired. Run `claude` in a terminal to refresh.")
+        format!(
+            "Claude {sub} subscription token has expired. Run `claude` in a terminal to refresh."
+        )
     } else if let Some(secs) = expires_in_secs {
         let hours = secs / 3600;
         let mins = (secs % 3600) / 60;

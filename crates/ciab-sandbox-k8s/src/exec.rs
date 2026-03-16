@@ -1,9 +1,6 @@
 use futures::TryStreamExt;
 use k8s_openapi::api::core::v1::Pod;
-use kube::{
-    api::AttachParams,
-    Api, Client,
-};
+use kube::{api::AttachParams, Api, Client};
 use tokio::sync::mpsc;
 
 use ciab_core::types::sandbox::ExecResult;
@@ -33,7 +30,10 @@ pub async fn exec_command(
 
     let cmd_refs: Vec<&str> = full_cmd.iter().map(|s| s.as_str()).collect();
 
-    let params = AttachParams::default().stdout(true).stderr(true).stdin(false);
+    let params = AttachParams::default()
+        .stdout(true)
+        .stderr(true)
+        .stdin(false);
 
     let start = std::time::Instant::now();
     let mut attached = api
@@ -62,7 +62,7 @@ pub async fn exec_command(
 
     let exit_code = if let Some(status_fut) = attached.take_status() {
         let status = status_fut.await;
-        status.and_then(|s| s.code).unwrap_or(0) as i32
+        status.and_then(|s| s.code).unwrap_or(0)
     } else {
         0
     };
@@ -116,14 +116,9 @@ pub async fn exec_streaming(
     tokio::spawn(async move {
         use tokio::io::AsyncBufReadExt;
         let mut lines = tokio::io::BufReader::new(stdout).lines();
-        loop {
-            match lines.next_line().await {
-                Ok(Some(line)) => {
-                    if tx.send(line).await.is_err() {
-                        break;
-                    }
-                }
-                _ => break,
+        while let Ok(Some(line)) = lines.next_line().await {
+            if tx.send(line).await.is_err() {
+                break;
             }
         }
     });

@@ -340,7 +340,11 @@ async fn process_queued_message(
             });
 
     // Per-session model/provider override stored in metadata at creation time.
-    if let Some(model) = session.metadata.get("model_override").and_then(|v| v.as_str()) {
+    if let Some(model) = session
+        .metadata
+        .get("model_override")
+        .and_then(|v| v.as_str())
+    {
         if !model.is_empty() {
             config.model = Some(model.to_string());
         }
@@ -407,7 +411,8 @@ async fn process_queued_message(
                         );
 
                         // Validate Ollama connectivity and emit a log event.
-                        let ollama_version_url = format!("{}/api/version", base_url.trim_end_matches('/'));
+                        let ollama_version_url =
+                            format!("{}/api/version", base_url.trim_end_matches('/'));
                         let http = reqwest::Client::builder()
                             .timeout(std::time::Duration::from_secs(5))
                             .build()
@@ -418,12 +423,19 @@ async fn process_queued_message(
                                     .json::<serde_json::Value>()
                                     .await
                                     .ok()
-                                    .and_then(|v| v.get("version").and_then(|v| v.as_str()).map(|s| s.to_string()))
+                                    .and_then(|v| {
+                                        v.get("version")
+                                            .and_then(|v| v.as_str())
+                                            .map(|s| s.to_string())
+                                    })
                                     .unwrap_or_else(|| "unknown".to_string());
                                 format!("[ciab] Ollama connected — version {version} @ {base_url}")
                             }
                             Ok(resp) => {
-                                format!("[ciab] Ollama reachable but returned HTTP {} @ {base_url}", resp.status())
+                                format!(
+                                    "[ciab] Ollama reachable but returned HTTP {} @ {base_url}",
+                                    resp.status()
+                                )
                             }
                             Err(e) => {
                                 format!("[ciab] WARNING: Ollama not reachable @ {base_url} — {e}. Agent will likely fail.")
@@ -519,7 +531,11 @@ async fn process_queued_message(
         && !config.extra.contains_key("claude_oauth_token")
     {
         match read_host_claude_oauth_token() {
-            HostClaudeAuth::ValidToken { token, subscription_type, expires_in_secs } => {
+            HostClaudeAuth::ValidToken {
+                token,
+                subscription_type,
+                expires_in_secs,
+            } => {
                 config.extra.insert(
                     "claude_oauth_token".to_string(),
                     serde_json::Value::String(token),
@@ -528,7 +544,11 @@ async fn process_queued_message(
                 let log_line = if expires_in_secs < 600 {
                     format!("[ciab] Inherited Claude {sub} subscription token (expires in {}m — consider re-logging in Claude Code)", expires_in_secs / 60)
                 } else {
-                    format!("[ciab] Inherited Claude {sub} subscription token (expires in {}h{}m)", expires_in_secs / 3600, (expires_in_secs % 3600) / 60)
+                    format!(
+                        "[ciab] Inherited Claude {sub} subscription token (expires in {}h{}m)",
+                        expires_in_secs / 3600,
+                        (expires_in_secs % 3600) / 60
+                    )
                 };
                 let log_event = StreamEvent {
                     id: format!("claude-auth-{}", Uuid::new_v4()),
@@ -557,7 +577,9 @@ async fn process_queued_message(
             }
             HostClaudeAuth::NotFound => {
                 // Check if ANTHROPIC_API_KEY is set in the environment as a fallback.
-                let has_env_key = std::env::var("ANTHROPIC_API_KEY").map(|k| !k.is_empty()).unwrap_or(false);
+                let has_env_key = std::env::var("ANTHROPIC_API_KEY")
+                    .map(|k| !k.is_empty())
+                    .unwrap_or(false);
                 if !has_env_key {
                     let log_event = StreamEvent {
                         id: format!("claude-auth-{}", Uuid::new_v4()),
@@ -1484,9 +1506,7 @@ enum HostClaudeAuth {
         expires_in_secs: i64,
     },
     /// Token found but already expired.
-    Expired {
-        subscription_type: Option<String>,
-    },
+    Expired { subscription_type: Option<String> },
     /// No credentials found on the host.
     NotFound,
 }
@@ -1512,8 +1532,8 @@ fn read_host_claude_oauth_token() -> HostClaudeAuth {
     // 2. Try ~/.claude/.credentials.json (plaintext fallback, all platforms)
     let credentials_path = {
         let home = std::env::var("HOME").unwrap_or_else(|_| "~".to_string());
-        let config_dir = std::env::var("CLAUDE_CONFIG_DIR")
-            .unwrap_or_else(|_| format!("{}/.claude", home));
+        let config_dir =
+            std::env::var("CLAUDE_CONFIG_DIR").unwrap_or_else(|_| format!("{}/.claude", home));
         std::path::PathBuf::from(config_dir).join(".credentials.json")
     };
 
@@ -1565,10 +1585,7 @@ fn parse_claude_credentials(value: &serde_json::Value) -> HostClaudeAuth {
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
 
-    let expires_at_ms = oauth
-        .get("expiresAt")
-        .and_then(|v| v.as_i64())
-        .unwrap_or(0);
+    let expires_at_ms = oauth.get("expiresAt").and_then(|v| v.as_i64()).unwrap_or(0);
 
     let now_ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

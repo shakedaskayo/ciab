@@ -244,11 +244,19 @@ impl AgentProvider for ClaudeCodeProvider {
         // Inherited host OAuth token — passed as CLAUDE_CODE_OAUTH_TOKEN.
         // This is set by the sessions route when the local Claude subscription token
         // was read from the macOS keychain or ~/.claude/.credentials.json.
-        if let Some(oauth_token) = config.extra.get("claude_oauth_token").and_then(|v| v.as_str()) {
-            env.insert("CLAUDE_CODE_OAUTH_TOKEN".to_string(), oauth_token.to_string());
+        if let Some(oauth_token) = config
+            .extra
+            .get("claude_oauth_token")
+            .and_then(|v| v.as_str())
+        {
+            env.insert(
+                "CLAUDE_CODE_OAUTH_TOKEN".to_string(),
+                oauth_token.to_string(),
+            );
             // Ensure ANTHROPIC_API_KEY is not set — Claude Code prioritises oauth over api key
             // but a non-empty ANTHROPIC_API_KEY can confuse it in some versions.
-            env.entry("ANTHROPIC_API_KEY".to_string()).or_insert_with(String::new);
+            env.entry("ANTHROPIC_API_KEY".to_string())
+                .or_default();
         }
 
         AgentCommand {
@@ -993,10 +1001,7 @@ impl AgentProvider for ClaudeCodeProvider {
                 agent_provider: "claude-code".to_string(),
                 llm_provider_kind: LlmProviderKind::Ollama,
                 env_var_mapping: [
-                    (
-                        "ANTHROPIC_BASE_URL".to_string(),
-                        "{base_url}".to_string(),
-                    ),
+                    ("ANTHROPIC_BASE_URL".to_string(), "{base_url}".to_string()),
                     ("ANTHROPIC_AUTH_TOKEN".to_string(), "ollama".to_string()),
                     ("ANTHROPIC_API_KEY".to_string(), "".to_string()),
                 ]
@@ -1004,7 +1009,8 @@ impl AgentProvider for ClaudeCodeProvider {
                 .collect(),
                 supports_model_override: true,
                 notes: Some(
-                    "Via ANTHROPIC_BASE_URL → Ollama Anthropic-compatible endpoint (no /v1)".to_string(),
+                    "Via ANTHROPIC_BASE_URL → Ollama Anthropic-compatible endpoint (no /v1)"
+                        .to_string(),
                 ),
             },
         ]

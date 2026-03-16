@@ -314,6 +314,7 @@ fn test_config() -> AppConfig {
             docker_socket: None,
             local_workdir: None,
             local_max_processes: None,
+            kubernetes: None,
         },
         agents: AgentsConfig {
             default_provider: "mock-agent".to_string(),
