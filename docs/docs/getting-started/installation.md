@@ -42,9 +42,30 @@ tar xzf ciab-darwin-arm64.tar.gz
 sudo mv ciab /usr/local/bin/
 ```
 
-## Desktop App
+## Desktop App (macOS)
 
-Download the macOS desktop app (`.dmg`) from [GitHub Releases](https://github.com/shakedaskayo/ciab/releases/latest).
+The CIAB desktop app provides a full GUI for managing sandboxes, workspaces, and agent sessions.
+
+**1. Download** the `.dmg` file from [GitHub Releases](https://github.com/shakedaskayo/ciab/releases/latest).
+
+**2. Open** the downloaded `.dmg` file. You'll see the CIAB app icon and an Applications folder shortcut:
+
+![CIAB DMG Installer](../assets/screenshots/dmg-install.png)
+
+**3. Drag** the CIAB icon into the **Applications** folder to install.
+
+**4. Launch** CIAB from your Applications folder or Spotlight (`Cmd + Space`, type "CIAB").
+
+!!! note "macOS Gatekeeper"
+    On first launch, macOS may show a warning since the app is not signed with an Apple Developer certificate. To open it:
+
+    1. Right-click (or Control-click) the app in Applications
+    2. Select **Open** from the context menu
+    3. Click **Open** in the dialog
+
+    You only need to do this once — subsequent launches will work normally.
+
+The desktop app includes a built-in CIAB server, so you don't need to run `ciab server start` separately.
 
 ## Build from Source
 
