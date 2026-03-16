@@ -56,7 +56,8 @@ pub async fn execute(command: ServerCommand) -> Result<()> {
                 runtimes.insert("opensandbox".to_string(), opensandbox_runtime);
             }
 
-            if app_config.runtime.backend == "kubernetes" || app_config.runtime.kubernetes.is_some() {
+            if app_config.runtime.backend == "kubernetes" || app_config.runtime.kubernetes.is_some()
+            {
                 let kc = app_config.runtime.kubernetes.clone().unwrap_or_default();
                 let k8s_cfg = ciab_sandbox_k8s::KubernetesRuntimeConfig {
                     kubeconfig: kc.kubeconfig,
@@ -98,10 +99,7 @@ pub async fn execute(command: ServerCommand) -> Result<()> {
                         .get("opensandbox")
                         .cloned()
                         .unwrap_or(local_runtime),
-                    "kubernetes" => runtimes
-                        .get("kubernetes")
-                        .cloned()
-                        .unwrap_or(local_runtime),
+                    "kubernetes" => runtimes.get("kubernetes").cloned().unwrap_or(local_runtime),
                     _ => runtimes.get("local").cloned().unwrap(),
                 };
 

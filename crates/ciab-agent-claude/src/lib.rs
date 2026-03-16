@@ -255,8 +255,7 @@ impl AgentProvider for ClaudeCodeProvider {
             );
             // Ensure ANTHROPIC_API_KEY is not set — Claude Code prioritises oauth over api key
             // but a non-empty ANTHROPIC_API_KEY can confuse it in some versions.
-            env.entry("ANTHROPIC_API_KEY".to_string())
-                .or_default();
+            env.entry("ANTHROPIC_API_KEY".to_string()).or_default();
         }
 
         AgentCommand {

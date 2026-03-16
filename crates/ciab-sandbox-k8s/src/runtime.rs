@@ -10,8 +10,8 @@ use uuid::Uuid;
 use ciab_core::error::{CiabError, CiabResult};
 use ciab_core::traits::runtime::SandboxRuntime;
 use ciab_core::types::sandbox::{
-    ExecRequest, ExecResult, FileInfo, LogOptions, ResourceStats, SandboxInfo,
-    SandboxPersistence, SandboxSpec, SandboxState,
+    ExecRequest, ExecResult, FileInfo, LogOptions, ResourceStats, SandboxInfo, SandboxPersistence,
+    SandboxSpec, SandboxState,
 };
 
 use crate::config::KubernetesRuntimeConfig;
@@ -90,10 +90,7 @@ impl KubernetesRuntime {
                 return Err(K8sError::PodTimeout(sandbox_id.to_string()));
             }
             if let Some(pod) = self.get_pod(sandbox_id).await? {
-                let phase = pod
-                    .status
-                    .as_ref()
-                    .and_then(|s| s.phase.as_deref());
+                let phase = pod.status.as_ref().and_then(|s| s.phase.as_deref());
                 match phase {
                     Some("Running") => return Ok(()),
                     Some("Failed") => {
@@ -146,10 +143,7 @@ impl KubernetesRuntime {
 
 #[async_trait]
 impl SandboxRuntime for KubernetesRuntime {
-    async fn create_sandbox(
-        &self,
-        spec: &SandboxSpec,
-    ) -> CiabResult<SandboxInfo> {
+    async fn create_sandbox(&self, spec: &SandboxSpec) -> CiabResult<SandboxInfo> {
         let sandbox_id = Uuid::new_v4();
         let api: Api<Pod> = Api::namespaced(self.client.clone(), &self.config.namespace);
 
@@ -234,10 +228,7 @@ impl SandboxRuntime for KubernetesRuntime {
         let api: Api<Pod> = Api::namespaced(self.client.clone(), &self.config.namespace);
         let name = pod_name(id);
 
-        match api
-            .delete(&name, &kube::api::DeleteParams::default())
-            .await
-        {
+        match api.delete(&name, &kube::api::DeleteParams::default()).await {
             Ok(_) => {}
             Err(kube::Error::Api(e)) if e.code == 404 => {}
             Err(e) => return Err(CiabError::RuntimeUnavailable(e.to_string())),
@@ -254,10 +245,7 @@ impl SandboxRuntime for KubernetesRuntime {
         let api: Api<Pod> = Api::namespaced(self.client.clone(), &self.config.namespace);
         let name = pod_name(id);
 
-        match api
-            .delete(&name, &kube::api::DeleteParams::default())
-            .await
-        {
+        match api.delete(&name, &kube::api::DeleteParams::default()).await {
             Ok(_) => {}
             Err(kube::Error::Api(e)) if e.code == 404 => {}
             Err(e) => return Err(CiabError::RuntimeUnavailable(e.to_string())),
@@ -325,7 +313,11 @@ impl SandboxRuntime for KubernetesRuntime {
             .exec(
                 id,
                 &ExecRequest {
-                    command: vec!["sh".to_string(), "-c".to_string(), format!("base64 < {}", path)],
+                    command: vec![
+                        "sh".to_string(),
+                        "-c".to_string(),
+                        format!("base64 < {}", path),
+                    ],
                     workdir: None,
                     env: HashMap::new(),
                     stdin: None,
@@ -377,7 +369,11 @@ impl SandboxRuntime for KubernetesRuntime {
             .exec(
                 id,
                 &ExecRequest {
-                    command: vec!["sh".to_string(), "-c".to_string(), format!("ls -la {}", path)],
+                    command: vec![
+                        "sh".to_string(),
+                        "-c".to_string(),
+                        format!("ls -la {}", path),
+                    ],
                     workdir: None,
                     env: HashMap::new(),
                     stdin: None,

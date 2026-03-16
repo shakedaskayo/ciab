@@ -312,23 +312,21 @@ impl AgentProvider for CursorProvider {
                             }),
                             timestamp: Utc::now(),
                         });
-                    } else {
-                        if let Some(text) = obj.get("result").and_then(|r| r.as_str()) {
-                            events.push(StreamEvent {
-                                id: Uuid::new_v4().to_string(),
-                                sandbox_id: *sandbox_id,
-                                session_id: None,
-                                event_type: StreamEventType::TextComplete,
-                                data: json!({
-                                    "text": text,
-                                    "duration_ms": obj.get("duration_ms"),
-                                    "duration_api_ms": obj.get("duration_api_ms"),
-                                    "session_id": obj.get("session_id"),
-                                    "request_id": obj.get("request_id"),
-                                }),
-                                timestamp: Utc::now(),
-                            });
-                        }
+                    } else if let Some(text) = obj.get("result").and_then(|r| r.as_str()) {
+                        events.push(StreamEvent {
+                            id: Uuid::new_v4().to_string(),
+                            sandbox_id: *sandbox_id,
+                            session_id: None,
+                            event_type: StreamEventType::TextComplete,
+                            data: json!({
+                                "text": text,
+                                "duration_ms": obj.get("duration_ms"),
+                                "duration_api_ms": obj.get("duration_api_ms"),
+                                "session_id": obj.get("session_id"),
+                                "request_id": obj.get("request_id"),
+                            }),
+                            timestamp: Utc::now(),
+                        });
                     }
 
                     // Signal session completion.

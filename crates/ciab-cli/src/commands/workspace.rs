@@ -41,9 +41,7 @@ pub async fn execute(
                     if let Some(ref b) = runtime_backend {
                         rt["backend"] = serde_json::Value::String(b.clone());
                     }
-                    if k8s_namespace.is_some()
-                        || k8s_runtime_class.is_some()
-                        || k8s_image.is_some()
+                    if k8s_namespace.is_some() || k8s_runtime_class.is_some() || k8s_image.is_some()
                     {
                         let mut k8s = serde_json::json!({});
                         if let Some(ns) = k8s_namespace {
@@ -55,7 +53,9 @@ pub async fn execute(
                         if let Some(img) = k8s_image {
                             k8s["kubernetes_image"] = serde_json::Value::String(img);
                         }
-                        rt.as_object_mut().unwrap().extend(k8s.as_object().unwrap().clone());
+                        rt.as_object_mut()
+                            .unwrap()
+                            .extend(k8s.as_object().unwrap().clone());
                     }
                     spec["runtime"] = rt;
                 }

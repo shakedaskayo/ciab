@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use k8s_openapi::api::core::v1::{
-    Capabilities, Container, EmptyDirVolumeSource, EnvVar, LocalObjectReference, Pod,
-    PodSpec, ResourceRequirements, SecurityContext, Toleration, Volume,
-    VolumeMount, PersistentVolumeClaimVolumeSource,
+    Capabilities, Container, EmptyDirVolumeSource, EnvVar, LocalObjectReference,
+    PersistentVolumeClaimVolumeSource, Pod, PodSpec, ResourceRequirements, SecurityContext,
+    Toleration, Volume, VolumeMount,
 };
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
@@ -18,11 +18,7 @@ pub fn pod_name(sandbox_id: &Uuid) -> String {
 }
 
 /// Build a Kubernetes Pod object from a SandboxSpec.
-pub fn build_pod(
-    sandbox_id: &Uuid,
-    spec: &SandboxSpec,
-    config: &KubernetesRuntimeConfig,
-) -> Pod {
+pub fn build_pod(sandbox_id: &Uuid, spec: &SandboxSpec, config: &KubernetesRuntimeConfig) -> Pod {
     let name = pod_name(sandbox_id);
 
     let mut labels = BTreeMap::new();
@@ -85,7 +81,11 @@ pub fn build_pod(
         env: if env.is_empty() { None } else { Some(env) },
         resources: Some(resources),
         security_context: container_security_context,
-        volume_mounts: if volume_mounts.is_empty() { None } else { Some(volume_mounts) },
+        volume_mounts: if volume_mounts.is_empty() {
+            None
+        } else {
+            Some(volume_mounts)
+        },
         working_dir: Some("/workspace".to_string()),
         ..Default::default()
     };
@@ -104,7 +104,8 @@ pub fn build_pod(
         .collect();
 
     // Node selector
-    let node_selector: BTreeMap<String, String> = config.node_selector.clone().into_iter().collect();
+    let node_selector: BTreeMap<String, String> =
+        config.node_selector.clone().into_iter().collect();
 
     // Image pull secrets
     let image_pull_secrets: Vec<LocalObjectReference> = config
@@ -117,11 +118,27 @@ pub fn build_pod(
         containers: vec![container],
         restart_policy: Some("Never".to_string()),
         security_context: pod_security_context,
-        tolerations: if tolerations.is_empty() { None } else { Some(tolerations) },
-        node_selector: if node_selector.is_empty() { None } else { Some(node_selector) },
-        image_pull_secrets: if image_pull_secrets.is_empty() { None } else { Some(image_pull_secrets) },
+        tolerations: if tolerations.is_empty() {
+            None
+        } else {
+            Some(tolerations)
+        },
+        node_selector: if node_selector.is_empty() {
+            None
+        } else {
+            Some(node_selector)
+        },
+        image_pull_secrets: if image_pull_secrets.is_empty() {
+            None
+        } else {
+            Some(image_pull_secrets)
+        },
         service_account_name: config.service_account.clone(),
-        volumes: if volumes.is_empty() { None } else { Some(volumes) },
+        volumes: if volumes.is_empty() {
+            None
+        } else {
+            Some(volumes)
+        },
         ..Default::default()
     };
 
@@ -167,7 +184,10 @@ fn build_resources(spec: &SandboxSpec, config: &KubernetesRuntimeConfig) -> Reso
         .as_ref()
         .map(|r| format!("{}Mi", r.memory_mb))
         .or_else(|| config.default_memory_request.clone());
-    let mem_lim = config.default_memory_limit.clone().or_else(|| mem_req.clone());
+    let mem_lim = config
+        .default_memory_limit
+        .clone()
+        .or_else(|| mem_req.clone());
 
     if let Some(v) = mem_req {
         requests.insert("memory".to_string(), Quantity(v));
@@ -177,8 +197,16 @@ fn build_resources(spec: &SandboxSpec, config: &KubernetesRuntimeConfig) -> Reso
     }
 
     ResourceRequirements {
-        requests: if requests.is_empty() { None } else { Some(requests) },
-        limits: if limits.is_empty() { None } else { Some(limits) },
+        requests: if requests.is_empty() {
+            None
+        } else {
+            Some(requests)
+        },
+        limits: if limits.is_empty() {
+            None
+        } else {
+            Some(limits)
+        },
         ..Default::default()
     }
 }

@@ -52,7 +52,11 @@ pub async fn create_pvc(
     Ok(())
 }
 
-pub async fn delete_pvc(client: &Client, namespace: &str, sandbox_id: &Uuid) -> Result<(), K8sError> {
+pub async fn delete_pvc(
+    client: &Client,
+    namespace: &str,
+    sandbox_id: &Uuid,
+) -> Result<(), K8sError> {
     let api: Api<PersistentVolumeClaim> = Api::namespaced(client.clone(), namespace);
     let name = pvc_name(sandbox_id);
     match api.delete(&name, &kube::api::DeleteParams::default()).await {
