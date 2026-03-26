@@ -66,6 +66,24 @@ pub enum CiabError {
     #[error("kubernetes pod not found: {0}")]
     KubernetesPodNotFound(String),
 
+    #[error("EC2 error: {0}")]
+    Ec2Error(String),
+
+    #[error("SSH error: {0}")]
+    SshError(String),
+
+    #[error("Packer error: {0}")]
+    PackerError(String),
+
+    #[error("Image build error: {0}")]
+    ImageBuildError(String),
+
+    #[error("Resource resolution error: {0}")]
+    ResourceResolutionError(String),
+
+    #[error("Unsupported operation: {0}")]
+    Unsupported(String),
+
     // Provisioning errors
     #[error("provisioning failed: {0}")]
     ProvisioningFailed(String),
@@ -180,6 +198,10 @@ impl CiabError {
             | Self::AgentCommunicationError(_)
             | Self::TunnelProviderError(_) => 400,
             Self::SandboxTimeout(_) | Self::Timeout(_) => 504,
+            Self::Ec2Error(_) | Self::SshError(_) => 502,
+            Self::PackerError(_) | Self::ImageBuildError(_) => 500,
+            Self::ResourceResolutionError(_) => 400,
+            Self::Unsupported(_) => 501,
             _ => 500,
         }
     }
@@ -209,6 +231,12 @@ impl CiabError {
             Self::OpenSandboxError(_) => "opensandbox_error",
             Self::KubernetesError(_) => "kubernetes_error",
             Self::KubernetesPodNotFound(_) => "kubernetes_pod_not_found",
+            Self::Ec2Error(_) => "EC2_ERROR",
+            Self::SshError(_) => "SSH_ERROR",
+            Self::PackerError(_) => "PACKER_ERROR",
+            Self::ImageBuildError(_) => "IMAGE_BUILD_ERROR",
+            Self::ResourceResolutionError(_) => "RESOURCE_RESOLUTION_ERROR",
+            Self::Unsupported(_) => "UNSUPPORTED",
             Self::ProvisioningFailed(_) => "provisioning_failed",
             Self::GitCloneFailed(_) => "git_clone_failed",
             Self::ScriptExecutionFailed(_) => "script_execution_failed",
