@@ -3,6 +3,7 @@ pub mod config;
 pub mod credential;
 pub mod files;
 pub mod gateway;
+pub mod image;
 pub mod oauth;
 pub mod sandbox;
 pub mod server;
@@ -63,6 +64,11 @@ pub enum Commands {
     Gateway {
         #[command(subcommand)]
         command: GatewayCommand,
+    },
+    /// Manage machine images (Packer builds)
+    Image {
+        #[command(subcommand)]
+        command: ImageCommand,
     },
 }
 
@@ -609,6 +615,40 @@ pub enum GatewayTokenCommand {
 }
 
 // -------------------------------------------------------------------------
+// Image subcommands
+// -------------------------------------------------------------------------
+
+#[derive(clap::Subcommand)]
+pub enum ImageCommand {
+    /// Build a machine image via Packer
+    Build {
+        /// Template source (path, URL, git::url, or builtin://name)
+        #[arg(long)]
+        template: Option<String>,
+
+        /// Packer variables (key=value, repeatable)
+        #[arg(long = "var", short = 'v')]
+        var: Vec<String>,
+
+        /// Agent provider to pre-install in the image
+        #[arg(long)]
+        agent: Option<String>,
+    },
+    /// List built images
+    List,
+    /// Check image build status
+    Status {
+        /// Build ID
+        build_id: String,
+    },
+    /// Delete a built image
+    Delete {
+        /// Image ID (e.g. AMI ID)
+        image_id: String,
+    },
+}
+
+// -------------------------------------------------------------------------
 // Dispatch
 // -------------------------------------------------------------------------
 
@@ -628,5 +668,6 @@ pub async fn execute(
         Commands::Server { command } => server::execute(command).await,
         Commands::Workspace { command } => workspace::execute(command, client, &format).await,
         Commands::Gateway { command } => gateway::execute(command, client, &format).await,
+        Commands::Image { command } => image::execute(command, client, &format).await,
     }
 }

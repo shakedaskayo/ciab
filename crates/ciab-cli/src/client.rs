@@ -650,6 +650,51 @@ impl CiabClient {
         self.check_response(resp).await
     }
 
+    // -----------------------------------------------------------------------
+    // Images
+    // -----------------------------------------------------------------------
+
+    pub async fn build_image(&self, body: &Value) -> Result<Value> {
+        let resp = self
+            .client
+            .post(self.url("/api/v1/images/build"))
+            .json(body)
+            .send()
+            .await
+            .context("build image")?;
+        self.check_response(resp).await
+    }
+
+    pub async fn list_images(&self) -> Result<Value> {
+        let resp = self
+            .client
+            .get(self.url("/api/v1/images"))
+            .send()
+            .await
+            .context("list images")?;
+        self.check_response(resp).await
+    }
+
+    pub async fn get_build_status(&self, build_id: &str) -> Result<Value> {
+        let resp = self
+            .client
+            .get(self.url(&format!("/api/v1/images/builds/{}", build_id)))
+            .send()
+            .await
+            .context("get build status")?;
+        self.check_response(resp).await
+    }
+
+    pub async fn delete_image(&self, image_id: &str) -> Result<Value> {
+        let resp = self
+            .client
+            .delete(self.url(&format!("/api/v1/images/{}", image_id)))
+            .send()
+            .await
+            .context("delete image")?;
+        self.check_response(resp).await
+    }
+
     pub async fn export_workspace_toml(&self, id: &str) -> Result<String> {
         let resp = self
             .client
