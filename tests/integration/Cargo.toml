@@ -20,6 +20,8 @@ ciab-agent-claude = { workspace = true }
 ciab-agent-codex = { workspace = true }
 ciab-agent-gemini = { workspace = true }
 ciab-agent-cursor = { workspace = true }
+ciab = { workspace = true, features = ["local"] }
+ciab-packer = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

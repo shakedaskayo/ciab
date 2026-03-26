@@ -18,7 +18,7 @@ pub async fn execute(command: ServerCommand) -> Result<()> {
             // 1. Load config via the resolution chain:
             //    explicit path → CIAB_CONFIG env var → ./config.toml → ~/.config/ciab/config.toml → embedded default.
             let config_path = config.clone();
-            let app_config = AppConfig::load(Some(&config))
+            let app_config = AppConfig::load(config.as_deref())
                 .await
                 .map_err(|e| anyhow::anyhow!("Failed to load config: {}", e))?;
             let app_config = Arc::new(app_config);
@@ -256,7 +256,7 @@ pub async fn execute(command: ServerCommand) -> Result<()> {
                 provisioning,
                 db,
                 config: app_config,
-                config_path: Some(config_path),
+                config_path,
                 gateway: Arc::new(RwLock::new(gateway)),
                 channel_manager: Arc::new(RwLock::new(None)),
                 pending_permissions: Arc::new(RwLock::new(std::collections::HashMap::new())),

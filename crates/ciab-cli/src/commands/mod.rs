@@ -415,9 +415,9 @@ pub enum ConfigCommand {
 pub enum ServerCommand {
     /// Start the API server
     Start {
-        /// Configuration file path
-        #[arg(long, short, default_value = "ciab.toml")]
-        config: String,
+        /// Configuration file path (omit to use resolution chain: CIAB_CONFIG env, ./config.toml, ~/.config/ciab/config.toml, embedded default)
+        #[arg(long, short)]
+        config: Option<String>,
 
         /// Database URL
         #[arg(long, env = "CIAB_DATABASE_URL", default_value = "sqlite://ciab.db")]

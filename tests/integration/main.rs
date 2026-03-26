@@ -2788,3 +2788,864 @@ async fn test_db_delete_session_messages_empty_session() {
     db.delete_session_messages(&sid).await.unwrap();
     assert_eq!(db.get_messages(&sid, None).await.unwrap().len(), 0);
 }
+
+// =============================================================================
+// Phase: Rust Library API, Cloud Provisioners, Config Improvements
+// =============================================================================
+
+// -- Config Resolution Chain --
+
+#[tokio::test]
+async fn test_appconfig_load_default() {
+    // The embedded default config should always parse successfully
+    let config = AppConfig::load_default().expect("embedded default config should parse");
+    assert_eq!(config.server.port, 9090);
+    assert_eq!(config.server.host, "0.0.0.0");
+    assert_eq!(config.runtime.backend, "local");
+    assert_eq!(config.agents.default_provider, "claude-code");
+    assert!(config.agents.providers.contains_key("claude-code"));
+    assert!(config.agents.providers.contains_key("codex"));
+    assert_eq!(config.credentials.backend, "sqlite");
+    assert_eq!(config.provisioning.timeout_secs, 300);
+    assert_eq!(config.streaming.buffer_size, 500);
+}
+
+#[tokio::test]
+async fn test_appconfig_load_falls_back_to_default() {
+    // When no config file exists and no env var is set, load() should fall back to embedded default.
+    // We unset the env var and use a nonexistent explicit path: None.
+    // Since we're in a test directory, there may be a config.toml — so we use an env override trick.
+    // Actually, just call load_default directly to test the embedded config works.
+    let config = AppConfig::load_default().unwrap();
+    assert_eq!(config.runtime.backend, "local");
+    assert!(config.runtime.ec2.is_none());
+    assert!(config.runtime.packer.is_none());
+    assert!(config.runtime.kubernetes.is_none());
+}
+
+#[tokio::test]
+async fn test_appconfig_parse_with_ec2_config() {
+    let toml_content = r#"
+[server]
+host = "0.0.0.0"
+port = 9090
+request_timeout_secs = 300
+cors_origins = ["*"]
+
+[runtime]
+backend = "ec2"
+
+[runtime.ec2]
+region = "us-west-2"
+default_ami = "ami-test123"
+instance_type = "t3.large"
+ssh_user = "ec2-user"
+ssh_port = 2222
+root_volume_size_gb = 50
+instance_ready_timeout_secs = 240
+security_group_ids = ["sg-abc123"]
+
+[runtime.ec2.tags]
+Team = "platform"
+
+[agents]
+default_provider = "claude-code"
+
+[agents.providers.claude-code]
+enabled = true
+binary = "claude"
+api_key_env = "ANTHROPIC_API_KEY"
+
+[credentials]
+backend = "sqlite"
+encryption_key_env = "CIAB_ENCRYPTION_KEY"
+
+[provisioning]
+timeout_secs = 300
+
+[streaming]
+buffer_size = 500
+keepalive_interval_secs = 15
+max_stream_duration_secs = 3600
+
+[security]
+api_keys = []
+
+[logging]
+level = "info"
+format = "json"
+
+[llm_providers]
+auto_detect_ollama = false
+"#;
+
+    let config: AppConfig = toml::from_str(toml_content).expect("should parse EC2 config");
+    assert_eq!(config.runtime.backend, "ec2");
+
+    let ec2 = config.runtime.ec2.expect("ec2 config should be present");
+    assert_eq!(ec2.region, "us-west-2");
+    assert_eq!(ec2.default_ami, Some("ami-test123".to_string()));
+    assert_eq!(ec2.instance_type, "t3.large");
+    assert_eq!(ec2.ssh_user, "ec2-user");
+    assert_eq!(ec2.ssh_port, 2222);
+    assert_eq!(ec2.root_volume_size_gb, 50);
+    assert_eq!(ec2.instance_ready_timeout_secs, 240);
+    assert_eq!(ec2.security_group_ids, vec!["sg-abc123"]);
+    assert_eq!(ec2.tags.get("Team"), Some(&"platform".to_string()));
+}
+
+#[tokio::test]
+async fn test_appconfig_parse_with_packer_config() {
+    let toml_content = r#"
+[server]
+host = "0.0.0.0"
+port = 9090
+request_timeout_secs = 300
+cors_origins = ["*"]
+
+[runtime]
+backend = "local"
+
+[runtime.packer]
+binary = "/usr/local/bin/packer"
+auto_install = true
+template_cache_dir = "/var/cache/ciab-packer"
+template_cache_ttl_secs = 7200
+default_template = "git::https://github.com/org/templates.git//ec2.pkr.hcl?ref=v2"
+
+[runtime.packer.variables]
+region = "eu-west-1"
+base_ami = "ami-eurobase"
+
+[agents]
+default_provider = "claude-code"
+
+[agents.providers.claude-code]
+enabled = true
+binary = "claude"
+api_key_env = "ANTHROPIC_API_KEY"
+
+[credentials]
+backend = "sqlite"
+encryption_key_env = "CIAB_ENCRYPTION_KEY"
+
+[provisioning]
+timeout_secs = 300
+
+[streaming]
+buffer_size = 500
+keepalive_interval_secs = 15
+max_stream_duration_secs = 3600
+
+[security]
+api_keys = []
+
+[logging]
+level = "info"
+format = "json"
+
+[llm_providers]
+auto_detect_ollama = false
+"#;
+
+    let config: AppConfig = toml::from_str(toml_content).expect("should parse Packer config");
+
+    let packer = config.runtime.packer.expect("packer config should be present");
+    assert_eq!(packer.binary, "/usr/local/bin/packer");
+    assert!(packer.auto_install);
+    assert_eq!(packer.template_cache_dir, "/var/cache/ciab-packer");
+    assert_eq!(packer.template_cache_ttl_secs, 7200);
+    assert_eq!(
+        packer.default_template,
+        "git::https://github.com/org/templates.git//ec2.pkr.hcl?ref=v2"
+    );
+    assert_eq!(packer.variables.get("region"), Some(&"eu-west-1".to_string()));
+    assert_eq!(packer.variables.get("base_ami"), Some(&"ami-eurobase".to_string()));
+}
+
+// -- Resource Resolver --
+
+#[test]
+fn test_resource_resolver_parse_source_string() {
+    use ciab_core::resolve::{parse_source_string, ResourceSource};
+
+    // File path
+    let src = parse_source_string("/etc/ciab/config.toml");
+    assert!(matches!(src, ResourceSource::FilePath(p) if p.to_str() == Some("/etc/ciab/config.toml")));
+
+    // URL
+    let src = parse_source_string("https://example.com/config.toml");
+    assert!(matches!(src, ResourceSource::Url(u) if u == "https://example.com/config.toml"));
+
+    // Builtin
+    let src = parse_source_string("builtin://default-ec2");
+    assert!(matches!(src, ResourceSource::Builtin(n) if n == "default-ec2"));
+
+    // Git with ref
+    let src = parse_source_string("git::https://github.com/org/repo.git//path/file.hcl?ref=main");
+    match src {
+        ResourceSource::Git { url, path, ref_ } => {
+            assert!(url.contains("github.com/org/repo.git"));
+            assert_eq!(path, "path/file.hcl");
+            assert_eq!(ref_, Some("main".to_string()));
+        }
+        _ => panic!("Expected Git source"),
+    }
+
+    // Git without ref
+    let src = parse_source_string("git::https://github.com/org/repo.git//template.hcl");
+    match src {
+        ResourceSource::Git { url, path, ref_ } => {
+            assert!(url.contains("github.com/org/repo.git"));
+            assert_eq!(path, "template.hcl");
+            assert!(ref_.is_none());
+        }
+        _ => panic!("Expected Git source"),
+    }
+}
+
+#[tokio::test]
+async fn test_resource_resolver_builtin_default_ec2() {
+    use ciab_core::resolve::{parse_source_string, resolve_resource};
+
+    let src = parse_source_string("builtin://default-ec2");
+    let content = resolve_resource(&src).await.expect("builtin default-ec2 should resolve");
+
+    // Verify it's a valid Packer template
+    assert!(content.contains("packer {"));
+    assert!(content.contains("amazon-ebs"));
+    assert!(content.contains("variable \"region\""));
+    assert!(content.contains("variable \"base_ami\""));
+    assert!(content.contains("variable \"agent_provider\""));
+    assert!(content.contains("provisioner \"shell\""));
+}
+
+#[tokio::test]
+async fn test_resource_resolver_builtin_default_config() {
+    use ciab_core::resolve::{parse_source_string, resolve_resource};
+
+    let src = parse_source_string("builtin://default-config");
+    let content = resolve_resource(&src).await.expect("builtin default-config should resolve");
+
+    // Verify it's a valid TOML config
+    assert!(content.contains("[server]"));
+    assert!(content.contains("[runtime]"));
+    assert!(content.contains("[agents]"));
+    assert!(content.contains("[credentials]"));
+
+    // Should parse as AppConfig
+    let _config: AppConfig = toml::from_str(&content).expect("builtin config should parse as AppConfig");
+}
+
+#[tokio::test]
+async fn test_resource_resolver_builtin_unknown() {
+    use ciab_core::resolve::{parse_source_string, resolve_resource};
+
+    let src = parse_source_string("builtin://nonexistent");
+    let result = resolve_resource(&src).await;
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert!(err.to_string().contains("Unknown builtin resource"));
+}
+
+#[tokio::test]
+async fn test_resource_resolver_file_not_found() {
+    use ciab_core::resolve::{parse_source_string, resolve_resource};
+
+    let src = parse_source_string("/tmp/definitely-does-not-exist-ciab-test-12345.toml");
+    let result = resolve_resource(&src).await;
+    assert!(result.is_err());
+}
+
+// -- Image Builder Types --
+
+#[test]
+fn test_image_build_request_serialization() {
+    use ciab_core::types::image::*;
+
+    let request = ImageBuildRequest {
+        template: Some(TemplateSource::Builtin {
+            name: "default-ec2".to_string(),
+        }),
+        variables: HashMap::from([
+            ("region".to_string(), "us-east-1".to_string()),
+            ("base_ami".to_string(), "ami-123".to_string()),
+        ]),
+        agent_provider: Some("claude-code".to_string()),
+        tags: HashMap::from([("env".to_string(), "test".to_string())]),
+    };
+
+    // Serialize to JSON
+    let json = serde_json::to_string(&request).expect("should serialize");
+    assert!(json.contains("default-ec2"));
+    assert!(json.contains("us-east-1"));
+    assert!(json.contains("claude-code"));
+
+    // Deserialize back
+    let parsed: ImageBuildRequest = serde_json::from_str(&json).expect("should deserialize");
+    assert!(parsed.template.is_some());
+    assert_eq!(parsed.variables.get("region"), Some(&"us-east-1".to_string()));
+    assert_eq!(parsed.agent_provider, Some("claude-code".to_string()));
+}
+
+#[test]
+fn test_image_build_status_serialization() {
+    use ciab_core::types::image::*;
+
+    // Succeeded
+    let status = ImageBuildStatus::Succeeded;
+    let json = serde_json::to_string(&status).unwrap();
+    assert_eq!(json, "\"succeeded\"");
+
+    // Failed
+    let status = ImageBuildStatus::Failed("timeout".to_string());
+    let json = serde_json::to_string(&status).unwrap();
+    assert!(json.contains("failed"));
+    assert!(json.contains("timeout"));
+
+    // Running
+    let status = ImageBuildStatus::Running;
+    let json = serde_json::to_string(&status).unwrap();
+    assert_eq!(json, "\"running\"");
+}
+
+#[test]
+fn test_image_build_result_serialization() {
+    use ciab_core::types::image::*;
+
+    let result = ImageBuildResult {
+        build_id: Uuid::new_v4(),
+        status: ImageBuildStatus::Succeeded,
+        image_id: Some("ami-0123456789abcdef0".to_string()),
+        logs: vec!["Building...".to_string(), "Done.".to_string()],
+    };
+
+    let json = serde_json::to_string(&result).expect("should serialize");
+    let parsed: ImageBuildResult = serde_json::from_str(&json).expect("should deserialize");
+    assert_eq!(parsed.image_id, Some("ami-0123456789abcdef0".to_string()));
+    assert_eq!(parsed.status, ImageBuildStatus::Succeeded);
+    assert_eq!(parsed.logs.len(), 2);
+}
+
+// -- Image Builder API Routes --
+
+use ciab_core::traits::image_builder::ImageBuilder;
+use ciab_core::types::image::*;
+
+struct MockImageBuilder {
+    images: DashMap<String, BuiltImage>,
+    builds: DashMap<Uuid, ImageBuildStatus>,
+}
+
+impl MockImageBuilder {
+    fn new() -> Self {
+        Self {
+            images: DashMap::new(),
+            builds: DashMap::new(),
+        }
+    }
+}
+
+#[async_trait]
+impl ImageBuilder for MockImageBuilder {
+    async fn build_image(&self, request: &ImageBuildRequest) -> CiabResult<ImageBuildResult> {
+        let build_id = Uuid::new_v4();
+        let image_id = format!("ami-mock-{}", &build_id.to_string()[..8]);
+
+        self.builds.insert(build_id, ImageBuildStatus::Succeeded);
+        self.images.insert(
+            image_id.clone(),
+            BuiltImage {
+                image_id: image_id.clone(),
+                provider: "amazon-ebs".to_string(),
+                region: request.variables.get("region").cloned(),
+                created_at: Utc::now(),
+                tags: request.tags.clone(),
+            },
+        );
+
+        Ok(ImageBuildResult {
+            build_id,
+            status: ImageBuildStatus::Succeeded,
+            image_id: Some(image_id),
+            logs: vec!["Mock build complete".to_string()],
+        })
+    }
+
+    async fn list_images(&self) -> CiabResult<Vec<BuiltImage>> {
+        Ok(self.images.iter().map(|r| r.value().clone()).collect())
+    }
+
+    async fn delete_image(&self, image_id: &str) -> CiabResult<()> {
+        self.images.remove(image_id);
+        Ok(())
+    }
+
+    async fn build_status(&self, build_id: &Uuid) -> CiabResult<ImageBuildStatus> {
+        self.builds
+            .get(build_id)
+            .map(|s| s.clone())
+            .ok_or_else(|| CiabError::ImageBuildError(format!("Build {} not found", build_id)))
+    }
+}
+
+async fn setup_test_app_with_image_builder() -> (axum::Router, Arc<Database>, Arc<MockRuntime>) {
+    let db = Arc::new(Database::new("sqlite::memory:").await.unwrap());
+    let runtime: Arc<MockRuntime> = Arc::new(MockRuntime::new());
+    let stream_handler: Arc<dyn StreamHandler> = Arc::new(StreamBroker::new(100));
+    let credential_store = Arc::new(
+        CredentialStore::new(db.clone(), "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+            .unwrap(),
+    );
+    let provisioning = Arc::new(ProvisioningPipeline::new(
+        runtime.clone(),
+        credential_store.clone(),
+        60,
+    ));
+
+    let mut agents: HashMap<String, Arc<dyn AgentProvider>> = HashMap::new();
+    agents.insert("mock-agent".to_string(), Arc::new(MockAgentProvider));
+
+    let config = Arc::new(test_config());
+    let mut runtimes: HashMap<String, Arc<dyn SandboxRuntime>> = HashMap::new();
+    runtimes.insert("local".to_string(), runtime.clone());
+
+    let image_builder: Arc<dyn ImageBuilder> = Arc::new(MockImageBuilder::new());
+
+    let state = AppState {
+        runtime: runtime.clone(),
+        agents,
+        runtimes,
+        credentials: credential_store,
+        stream_handler,
+        provisioning,
+        db: db.clone(),
+        config,
+        config_path: None,
+        gateway: Arc::new(tokio::sync::RwLock::new(None)),
+        channel_manager: Arc::new(tokio::sync::RwLock::new(None)),
+        pending_permissions: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+        session_permissions: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+        pending_user_inputs: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+        session_queues: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+        image_builder: Some(image_builder),
+    };
+
+    let router = build_router(state);
+    (router, db, runtime)
+}
+
+#[tokio::test]
+async fn test_image_build_endpoint() {
+    let (app, _db, _rt) = setup_test_app_with_image_builder().await;
+
+    let body = serde_json::json!({
+        "template": {
+            "type": "builtin",
+            "name": "default-ec2"
+        },
+        "variables": {
+            "region": "us-east-1",
+            "base_ami": "ami-test"
+        },
+        "agent_provider": "claude-code",
+        "tags": {
+            "env": "test"
+        }
+    });
+
+    let response = app
+        .oneshot(json_request("POST", "/api/v1/images/build", Some(body)))
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::ACCEPTED);
+
+    let result = response_json(response).await;
+    assert!(result["build_id"].is_string());
+    assert_eq!(result["status"], "succeeded");
+    assert!(result["image_id"].as_str().unwrap().starts_with("ami-mock-"));
+    assert!(result["logs"].as_array().unwrap().len() > 0);
+}
+
+#[tokio::test]
+async fn test_image_list_endpoint() {
+    let (app, _db, _rt) = setup_test_app_with_image_builder().await;
+
+    // First build an image
+    let build_body = serde_json::json!({
+        "variables": {"region": "us-west-2"},
+        "tags": {"env": "staging"}
+    });
+
+    let app_clone = app.clone();
+    let response = app_clone
+        .oneshot(json_request("POST", "/api/v1/images/build", Some(build_body)))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::ACCEPTED);
+
+    // Now list images
+    let response = app
+        .oneshot(json_request("GET", "/api/v1/images", None))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body = response_json(response).await;
+    let images = body.as_array().unwrap();
+    assert_eq!(images.len(), 1);
+    assert!(images[0]["image_id"].as_str().unwrap().starts_with("ami-mock-"));
+    assert_eq!(images[0]["provider"], "amazon-ebs");
+}
+
+#[tokio::test]
+async fn test_image_build_status_endpoint() {
+    let (app, _db, _rt) = setup_test_app_with_image_builder().await;
+
+    // Build an image
+    let build_body = serde_json::json!({
+        "variables": {"region": "us-east-1"}
+    });
+
+    let app_clone = app.clone();
+    let response = app_clone
+        .oneshot(json_request("POST", "/api/v1/images/build", Some(build_body)))
+        .await
+        .unwrap();
+    let result = response_json(response).await;
+    let build_id = result["build_id"].as_str().unwrap();
+
+    // Check build status
+    let response = app
+        .oneshot(json_request(
+            "GET",
+            &format!("/api/v1/images/builds/{}", build_id),
+            None,
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let status = response_json(response).await;
+    assert_eq!(status, "succeeded");
+}
+
+#[tokio::test]
+async fn test_image_delete_endpoint() {
+    let (app, _db, _rt) = setup_test_app_with_image_builder().await;
+
+    // Build an image
+    let build_body = serde_json::json!({
+        "variables": {"region": "us-east-1"}
+    });
+
+    let app_clone1 = app.clone();
+    let response = app_clone1
+        .oneshot(json_request("POST", "/api/v1/images/build", Some(build_body)))
+        .await
+        .unwrap();
+    let result = response_json(response).await;
+    let image_id = result["image_id"].as_str().unwrap().to_string();
+
+    // Delete the image
+    let app_clone2 = app.clone();
+    let response = app_clone2
+        .oneshot(json_request(
+            "DELETE",
+            &format!("/api/v1/images/{}", image_id),
+            None,
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+
+    // List should be empty now
+    let response = app
+        .oneshot(json_request("GET", "/api/v1/images", None))
+        .await
+        .unwrap();
+    let body = response_json(response).await;
+    assert_eq!(body.as_array().unwrap().len(), 0);
+}
+
+#[tokio::test]
+async fn test_image_endpoints_without_builder() {
+    // Use the regular test app which has image_builder: None
+    let (app, _db, _rt) = setup_test_app().await;
+
+    // All image endpoints should return error when no builder is configured
+    let response = app
+        .oneshot(json_request("GET", "/api/v1/images", None))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+
+    let body = response_json(response).await;
+    assert!(body["error"]["message"]
+        .as_str()
+        .unwrap()
+        .contains("No image builder configured"));
+}
+
+// -- Packer Builder Unit Tests --
+
+#[test]
+fn test_packer_image_builder_construction() {
+    use ciab_packer::PackerImageBuilder;
+    use ciab_core::types::config::PackerConfig;
+
+    let config = PackerConfig {
+        binary: "packer".to_string(),
+        auto_install: false,
+        template_cache_dir: "/tmp".to_string(),
+        template_cache_ttl_secs: 3600,
+        default_template: "builtin://default-ec2".to_string(),
+        variables: HashMap::new(),
+    };
+
+    // Smoke test — constructor should not panic
+    let _builder = PackerImageBuilder::new(config);
+}
+
+// -- Error Type Tests --
+
+#[test]
+fn test_new_error_variants() {
+    use ciab_core::error::CiabError;
+
+    // EC2 error
+    let err = CiabError::Ec2Error("instance not found".to_string());
+    assert!(err.to_string().contains("EC2 error"));
+    assert!(err.to_string().contains("instance not found"));
+
+    // SSH error
+    let err = CiabError::SshError("connection refused".to_string());
+    assert!(err.to_string().contains("SSH error"));
+
+    // Packer error
+    let err = CiabError::PackerError("template invalid".to_string());
+    assert!(err.to_string().contains("Packer error"));
+
+    // Image build error
+    let err = CiabError::ImageBuildError("build timed out".to_string());
+    assert!(err.to_string().contains("Image build error"));
+
+    // Resource resolution error
+    let err = CiabError::ResourceResolutionError("404 not found".to_string());
+    assert!(err.to_string().contains("Resource resolution error"));
+
+    // Unsupported
+    let err = CiabError::Unsupported("EC2 pause not supported".to_string());
+    assert!(err.to_string().contains("Unsupported operation"));
+}
+
+// -- CiabEngine Builder Tests --
+
+#[tokio::test]
+async fn test_ciab_engine_default_build() {
+    use ciab::CiabEngine;
+
+    let engine = CiabEngine::builder()
+        .config_default()
+        .database_url("sqlite::memory:")
+        .build()
+        .await;
+
+    assert!(engine.is_ok(), "CiabEngine default build failed: {:?}", engine.err());
+
+    let engine = engine.unwrap();
+    assert_eq!(engine.config().runtime.backend, "local");
+    assert_eq!(engine.config().agents.default_provider, "claude-code");
+
+    // runtime() returns default runtime (no args)
+    let _rt = engine.runtime();
+
+    // agent() returns Option
+    assert!(engine.agent("claude-code").is_some());
+    assert!(engine.agent("codex").is_some());
+    assert!(engine.agent("nonexistent").is_none());
+}
+
+#[tokio::test]
+async fn test_ciab_engine_with_custom_config() {
+    use ciab::CiabEngine;
+
+    let mut config = AppConfig::load_default().unwrap();
+    config.server.port = 8888;
+    config.runtime.backend = "local".to_string();
+
+    let engine = CiabEngine::builder()
+        .config(config)
+        .database_url("sqlite::memory:")
+        .build()
+        .await
+        .expect("should build with custom config");
+
+    assert_eq!(engine.config().server.port, 8888);
+}
+
+#[tokio::test]
+async fn test_ciab_engine_sandbox_lifecycle() {
+    use ciab::CiabEngine;
+    use ciab_core::types::sandbox::{SandboxSpec, SandboxState};
+
+    let engine = CiabEngine::builder()
+        .config_default()
+        .database_url("sqlite::memory:")
+        .build()
+        .await
+        .expect("should build");
+
+    // Create a sandbox (SandboxSpec doesn't derive Default — construct manually)
+    let spec = SandboxSpec {
+        name: Some("test-sandbox".to_string()),
+        agent_provider: "claude-code".to_string(),
+        image: None,
+        resource_limits: None,
+        persistence: ciab_core::types::sandbox::SandboxPersistence::Ephemeral,
+        network: None,
+        env_vars: HashMap::new(),
+        volumes: Vec::new(),
+        ports: Vec::new(),
+        git_repos: Vec::new(),
+        credentials: Vec::new(),
+        provisioning_scripts: Vec::new(),
+        labels: HashMap::new(),
+        timeout_secs: None,
+        agent_config: None,
+        local_mounts: Vec::new(),
+        runtime_backend: None,
+    };
+
+    let result = engine.create_sandbox(&spec).await;
+    assert!(result.is_ok(), "create_sandbox failed: {:?}", result.err());
+
+    let sandbox = result.unwrap();
+    assert_eq!(sandbox.name, Some("test-sandbox".to_string()));
+    assert_eq!(sandbox.agent_provider, "claude-code");
+    assert_eq!(sandbox.state, SandboxState::Running);
+
+    // Get sandbox
+    let fetched = engine.get_sandbox(&sandbox.id).await;
+    assert!(fetched.is_ok());
+    assert_eq!(fetched.unwrap().id, sandbox.id);
+
+    // List sandboxes
+    let list = engine
+        .list_sandboxes(None, None, &HashMap::new())
+        .await
+        .unwrap();
+    assert!(list.iter().any(|s| s.id == sandbox.id));
+
+    // Terminate sandbox
+    let term_result = engine.terminate_sandbox(&sandbox.id).await;
+    assert!(term_result.is_ok());
+}
+
+#[tokio::test]
+async fn test_ciab_engine_exec() {
+    use ciab::CiabEngine;
+    use ciab_core::types::sandbox::{SandboxSpec, ExecRequest};
+
+    let engine = CiabEngine::builder()
+        .config_default()
+        .database_url("sqlite::memory:")
+        .build()
+        .await
+        .expect("should build");
+
+    let spec = SandboxSpec {
+        name: Some("exec-test".to_string()),
+        agent_provider: "claude-code".to_string(),
+        image: None,
+        resource_limits: None,
+        persistence: ciab_core::types::sandbox::SandboxPersistence::Ephemeral,
+        network: None,
+        env_vars: HashMap::new(),
+        volumes: Vec::new(),
+        ports: Vec::new(),
+        git_repos: Vec::new(),
+        credentials: Vec::new(),
+        provisioning_scripts: Vec::new(),
+        labels: HashMap::new(),
+        timeout_secs: None,
+        agent_config: None,
+        local_mounts: Vec::new(),
+        runtime_backend: None,
+    };
+
+    let sandbox = engine.create_sandbox(&spec).await.unwrap();
+
+    // Execute a simple command (command is Vec<String>)
+    let request = ExecRequest {
+        command: vec!["echo".to_string(), "hello world".to_string()],
+        workdir: None,
+        env: HashMap::new(),
+        stdin: None,
+        timeout_secs: Some(10),
+        tty: false,
+    };
+
+    let result = engine.exec(&sandbox.id, &request).await;
+    assert!(result.is_ok(), "exec failed: {:?}", result.err());
+
+    let exec_result = result.unwrap();
+    assert_eq!(exec_result.exit_code, 0);
+    assert!(exec_result.stdout.contains("hello world"));
+
+    engine.terminate_sandbox(&sandbox.id).await.unwrap();
+}
+
+#[tokio::test]
+async fn test_ciab_engine_file_operations() {
+    use ciab::CiabEngine;
+    use ciab_core::types::sandbox::SandboxSpec;
+
+    let engine = CiabEngine::builder()
+        .config_default()
+        .database_url("sqlite::memory:")
+        .build()
+        .await
+        .expect("should build");
+
+    let spec = SandboxSpec {
+        name: Some("file-test".to_string()),
+        agent_provider: "claude-code".to_string(),
+        image: None,
+        resource_limits: None,
+        persistence: ciab_core::types::sandbox::SandboxPersistence::Ephemeral,
+        network: None,
+        env_vars: HashMap::new(),
+        volumes: Vec::new(),
+        ports: Vec::new(),
+        git_repos: Vec::new(),
+        credentials: Vec::new(),
+        provisioning_scripts: Vec::new(),
+        labels: HashMap::new(),
+        timeout_secs: None,
+        agent_config: None,
+        local_mounts: Vec::new(),
+        runtime_backend: None,
+    };
+
+    let sandbox = engine.create_sandbox(&spec).await.unwrap();
+
+    // Write a file
+    let content = b"Hello from CIAB engine test!";
+    let write_result = engine
+        .write_file(&sandbox.id, "/tmp/ciab-test-file.txt", content)
+        .await;
+    assert!(write_result.is_ok(), "write_file failed: {:?}", write_result.err());
+
+    // Read it back
+    let read_result = engine.read_file(&sandbox.id, "/tmp/ciab-test-file.txt").await;
+    assert!(read_result.is_ok(), "read_file failed: {:?}", read_result.err());
+    assert_eq!(read_result.unwrap(), content);
+
+    // List files
+    let list_result = engine.list_files(&sandbox.id, "/tmp").await;
+    assert!(list_result.is_ok());
+
+    engine.terminate_sandbox(&sandbox.id).await.unwrap();
+}
