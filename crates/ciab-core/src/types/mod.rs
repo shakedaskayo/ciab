@@ -2,6 +2,7 @@ pub mod agent;
 pub mod channel;
 pub mod config;
 pub mod credentials;
+pub mod image;
 pub mod llm_provider;
 pub mod sandbox;
 pub mod session;
