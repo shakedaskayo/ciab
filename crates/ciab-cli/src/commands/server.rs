@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 
 use ciab_core::traits::agent::AgentProvider;
 use ciab_core::types::config::AppConfig;
@@ -15,13 +15,12 @@ pub async fn execute(command: ServerCommand) -> Result<()> {
             config,
             database_url,
         } => {
-            // 1. Load config from TOML file.
+            // 1. Load config via the resolution chain:
+            //    explicit path → CIAB_CONFIG env var → ./config.toml → ~/.config/ciab/config.toml → embedded default.
             let config_path = config.clone();
-            let config_content = tokio::fs::read_to_string(&config)
+            let app_config = AppConfig::load(Some(&config))
                 .await
-                .with_context(|| format!("reading config file: {}", config))?;
-            let app_config: AppConfig =
-                toml::from_str(&config_content).with_context(|| "parsing config TOML")?;
+                .map_err(|e| anyhow::anyhow!("Failed to load config: {}", e))?;
             let app_config = Arc::new(app_config);
 
             // 2. Initialize Database.
