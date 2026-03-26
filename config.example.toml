@@ -67,6 +67,50 @@ backend = "local"
 # # kubeconfig = "/home/user/.kube/config"
 # # context = "my-cluster"
 
+# For AWS EC2 backend:
+# backend = "ec2"
+#
+# [runtime.ec2]
+# region = "us-east-1"
+# default_ami = "ami-0abcdef1234567890"    # Ubuntu 22.04 or Packer-built AMI
+# instance_type = "t3.medium"
+# # subnet_id = "subnet-xxxxx"             # Uses default VPC if omitted
+# security_group_ids = ["sg-xxxxx"]         # Must allow SSH inbound from CIAB host
+# ssh_user = "ubuntu"
+# ssh_port = 22
+# # iam_instance_profile = ""              # Optional IAM role for the instance
+# root_volume_size_gb = 20
+# instance_ready_timeout_secs = 180
+#
+# [runtime.ec2.tags]
+# Environment = "ciab"
+# ManagedBy = "ciab"
+
+# --- Packer Image Builder ---
+# Build machine images with HashiCorp Packer. Images can be used by EC2 or other runtimes.
+# Packer templates can be loaded from: local files, HTTP URLs, or Git repositories.
+
+# [packer]
+# binary = "packer"
+# auto_install = true
+# template_cache_dir = "/tmp/ciab-packer-cache"
+# template_cache_ttl_secs = 3600
+#
+# # Default template — used when no template is specified in a build request
+# # Built-in:
+# default_template = "builtin://default-ec2"
+# # Or from Git:
+# # default_template = "git::https://github.com/org/templates.git//agent.pkr.hcl?ref=main"
+# # Or from URL:
+# # default_template = "https://example.com/packer/agent.pkr.hcl"
+# # Or local file:
+# # default_template = "/path/to/template.pkr.hcl"
+#
+# [packer.variables]
+# region = "us-east-1"
+# base_ami = "ami-0abcdef1234567890"       # Ubuntu 22.04 base
+# instance_type = "t3.medium"
+
 # --- Agent Providers ---
 
 [agents]
