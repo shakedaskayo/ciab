@@ -6,6 +6,7 @@ members = [
     "crates/ciab-streaming",
     "crates/ciab-sandbox",
     "crates/ciab-sandbox-k8s",
+    "crates/ciab-sandbox-ec2",
     "crates/ciab-agent-claude",
     "crates/ciab-agent-codex",
     "crates/ciab-agent-gemini",
@@ -63,6 +64,7 @@ ciab-db = { path = "crates/ciab-db" }
 ciab-streaming = { path = "crates/ciab-streaming" }
 ciab-sandbox = { path = "crates/ciab-sandbox" }
 ciab-sandbox-k8s = { path = "crates/ciab-sandbox-k8s" }
+ciab-sandbox-ec2 = { path = "crates/ciab-sandbox-ec2" }
 ciab-agent-claude = { path = "crates/ciab-agent-claude" }
 ciab-agent-codex = { path = "crates/ciab-agent-codex" }
 ciab-agent-gemini = { path = "crates/ciab-agent-gemini" }

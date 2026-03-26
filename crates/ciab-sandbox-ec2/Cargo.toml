@@ -1,0 +1,25 @@
+[package]
+name = "ciab-sandbox-ec2"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "AWS EC2 runtime backend for CIAB"
+
+[dependencies]
+ciab-core = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+dashmap = { workspace = true }
+aws-config = "1"
+aws-sdk-ec2 = "1"
+russh = "0.48"
+russh-keys = "0.48"
+ssh-key = { version = "0.6", features = ["ed25519"] }
+base64 = "0.22"
+rand = "0.8"
