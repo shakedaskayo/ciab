@@ -14,6 +14,7 @@ members = [
     "crates/ciab-provisioning",
     "crates/ciab-gateway",
     "crates/ciab-channels",
+    "crates/ciab-packer",
     "crates/ciab-api",
     "crates/ciab-cli",
     "tests/integration",
@@ -70,5 +71,6 @@ ciab-credentials = { path = "crates/ciab-credentials" }
 ciab-provisioning = { path = "crates/ciab-provisioning" }
 ciab-gateway = { path = "crates/ciab-gateway" }
 ciab-channels = { path = "crates/ciab-channels" }
+ciab-packer = { path = "crates/ciab-packer" }
 ciab-api = { path = "crates/ciab-api" }
 ciab-cli = { path = "crates/ciab-cli" }
