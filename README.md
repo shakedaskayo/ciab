@@ -16,7 +16,7 @@
 
 <br>
 
-CIAB (**Claude-In-A-Box**) is an open-source control plane for coding agents. Spin up **Claude Code**, **Codex**, **Gemini CLI**, or **Cursor** in isolated sandboxes — as local processes or containers — and manage them through a unified **REST API**, **CLI**, **desktop app**, or **any web browser**.
+CIAB (**Claude-In-A-Box**) is an open-source control plane for coding agents. Spin up **Claude Code**, **Codex**, **Gemini CLI**, or **Cursor** in isolated sandboxes — as local processes, containers, or AWS EC2 instances — and manage them through a unified **REST API**, **CLI**, **desktop app**, or **any web browser**.
 
 Every sandbox gets its own workspace, credentials, repos, and real-time streaming output. Access them from your laptop, phone, tablet, or CI pipeline — from the same network or anywhere in the world via built-in tunneling.
 
@@ -92,8 +92,7 @@ Browse and install agent skills from the [skills.sh](https://skills.sh) open reg
 # Install
 curl -fsSL https://raw.githubusercontent.com/shakedaskayo/ciab/main/install.sh | bash
 
-# Initialize and start
-ciab config init
+# Start (zero config needed — embedded defaults just work)
 ciab server start
 
 # Create a sandbox with Claude Code
@@ -114,7 +113,7 @@ ciab agent chat <sandbox-id> --message "Refactor the auth module" --stream
 | | What you get |
 |---|---|
 | **Multi-agent** | Run Claude Code, Codex, Gemini CLI, and Cursor side-by-side. Switch providers with one config change. |
-| **Isolated sandboxes** | Each agent gets its own workspace, env vars, credentials, and mounted repos. Local processes, containers, or Kubernetes pods. |
+| **Isolated sandboxes** | Each agent gets its own workspace, env vars, credentials, and mounted repos. Local processes, containers, Kubernetes pods, or EC2 instances. |
 | **Real-time streaming** | Watch agent output as it happens — text deltas, tool use, provisioning steps, logs — all over SSE. |
 | **Access anywhere** | Open sandboxes from your phone, tablet, laptop, or CI pipeline. Built-in web gateway with QR codes, mDNS, and tunneling. |
 | **Workspaces** | Reusable, TOML-configurable environment definitions. Bundle repos, skills, pre-commands, binaries, and agent config. |
@@ -122,6 +121,8 @@ ciab agent chat <sandbox-id> --message "Refactor the auth module" --stream
 | **Encrypted credentials** | AES-256-GCM vault with OAuth2 support. Credentials injected at provisioning time, never stored in plaintext. |
 | **Remote tunnels** | One-click expose via bore, Cloudflare Tunnel, ngrok, or frp. Token-scoped auth with LAN discovery. |
 | **Channels** | Pipe agent conversations through Slack, WhatsApp, or webhooks. Per-sender session tracking. |
+| **Rust library** | Embed CIAB in any Rust app with `CiabEngine::builder().build()`. Feature-gated crate — pick only the runtimes you need. |
+| **Cloud provisioning** | Build AMIs with Packer, launch EC2 instances, manage remote sandboxes. Templates from git repos, URLs, or built-in defaults. |
 | **Desktop + Web** | Tauri + React desktop app and responsive web UI — same interface on any device. |
 
 <br>
@@ -187,6 +188,65 @@ ciab workspace launch <workspace-id>
 
 <br>
 
+## Rust Library
+
+Embed CIAB natively in any Rust application:
+
+```rust
+use ciab::CiabEngine;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let engine = CiabEngine::builder()
+        .config_default()          // or .config_from_file("config.toml")
+        .build()
+        .await?;
+
+    // Create a sandbox
+    let sandbox = engine.create_sandbox(&spec).await?;
+
+    // Execute commands
+    let result = engine.exec(&sandbox.id, &request).await?;
+    println!("{}", result.stdout);
+
+    Ok(())
+}
+```
+
+```toml
+# Cargo.toml — pick only what you need
+[dependencies]
+ciab = { version = "0.1", features = ["local", "ec2", "packer"] }
+```
+
+<br>
+
+## Cloud Provisioning
+
+Build machine images and run sandboxes on AWS EC2:
+
+```bash
+# Build an AMI with Claude Code pre-installed
+ciab image build --agent claude-code \
+  --var region=us-east-1 \
+  --var base_ami=ami-0abcdef1234567890
+
+# Or use a custom Packer template from a git repo
+ciab image build \
+  --template "git::https://github.com/org/templates.git//agent.pkr.hcl?ref=main" \
+  --var region=eu-west-1
+
+# Configure EC2 as the default runtime
+# config.toml:
+# [runtime]
+# backend = "ec2"
+# [runtime.ec2]
+# region = "us-east-1"
+# default_ami = "ami-your-built-image"
+```
+
+<br>
+
 ## Architecture
 
 ```
@@ -195,9 +255,12 @@ crates/
   ciab-api              Axum REST API — 15 route groups
   ciab-sandbox          Runtime backends: local process, Docker, OpenSandbox
   ciab-sandbox-k8s      Kubernetes runtime backend (Kata Containers support)
+  ciab-sandbox-ec2      AWS EC2 runtime backend (ephemeral instances, SSH exec)
   ciab-streaming        SSE broker with event buffer and replay
   ciab-provisioning     9-step sandbox provisioning pipeline
   ciab-credentials      AES-256-GCM encrypted vault, OAuth2
+  ciab-packer           HashiCorp Packer image builder (AMI builds)
+  ciab                  Rust library facade (CiabEngine, feature-gated re-exports)
   ciab-gateway          Web gateway + tunneling (bore, Cloudflare, ngrok, frp) + LAN/mDNS
   ciab-channels         Slack, WhatsApp, webhook adapters
   ciab-agent-claude     Claude Code provider
