@@ -101,6 +101,7 @@ nav:
   - Architecture:
     - Overview: architecture/index.md
     - Crate Map: architecture/crate-map.md
+    - Rust Library: architecture/rust-library.md
     - Provisioning Pipeline: architecture/provisioning-pipeline.md
     - Streaming: architecture/streaming.md
     - Sandbox Lifecycle: architecture/sandbox-lifecycle.md
@@ -113,6 +114,7 @@ nav:
     - Credentials: api-reference/credentials.md
     - OAuth: api-reference/oauth.md
     - Workspaces: api-reference/workspaces.md
+    - Images: api-reference/images.md
     - Streaming: api-reference/streaming.md
   - CLI Reference:
     - Overview: cli-reference/index.md
@@ -124,6 +126,7 @@ nav:
     - oauth: cli-reference/oauth.md
     - config: cli-reference/config.md
     - workspace: cli-reference/workspace.md
+    - image: cli-reference/image.md
     - server: cli-reference/server.md
   - Configuration:
     - Config Reference: configuration/index.md
@@ -139,6 +142,8 @@ nav:
     - Overview: deployment/index.md
     - Mobile Access: deployment/mobile-access.md
     - Docker: deployment/docker.md
+    - AWS EC2: deployment/ec2.md
+    - Packer: deployment/packer.md
     - Kubernetes: deployment/kubernetes.md
     - OpenSandbox: deployment/opensandbox.md
     - Production: deployment/production.md

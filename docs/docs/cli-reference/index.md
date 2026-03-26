@@ -22,6 +22,7 @@ The `ciab` CLI provides interactive access to all CIAB functionality.
 | [`credential`](credential.md) | Credential management |
 | [`oauth`](oauth.md) | OAuth flows |
 | [`config`](config.md) | Configuration management |
+| [`image`](image.md) | Machine image management (Packer) |
 | [`server`](server.md) | API server commands |
 
 ## Examples

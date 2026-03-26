@@ -15,7 +15,7 @@ request_timeout_secs = 300     # Request timeout
 cors_origins = ["*"]           # CORS allowed origins
 
 [runtime]
-backend = "local"                          # "local", "docker", "opensandbox", "kubernetes"
+backend = "local"                          # "local", "docker", "opensandbox", "kubernetes", "ec2"
 # opensandbox_url = "http://localhost:8000"   # OpenSandbox API URL
 # opensandbox_api_key = "${OPENSANDBOX_API_KEY}"  # Optional API key
 
@@ -25,6 +25,21 @@ backend = "local"                          # "local", "docker", "opensandbox", "
 # runtime_class = "kata-containers"         # Optional: Kata Containers
 # storage_class = "standard"
 # workspace_pvc_size = "10Gi"
+
+# [runtime.ec2]
+# region = "us-east-1"
+# default_ami = "ami-0abcdef1234567890"
+# instance_type = "t3.medium"
+# subnet_id = "subnet-0123456789abcdef0"
+# security_group_ids = ["sg-0123456789abcdef0"]
+# ssh_user = "ubuntu"
+# root_volume_size_gb = 30
+
+# [packer]
+# template_source = "builtin://default-ec2"
+# default_region = "us-east-1"
+# build_instance_type = "t3.medium"
+# auto_install = true
 
 [agents]
 default_provider = "claude-code"   # Default agent provider
@@ -97,7 +112,7 @@ format = "json"                        # Log format: json, pretty
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `backend` | string | `local` | Runtime backend: `local`, `docker`, `opensandbox`, `kubernetes` |
+| `backend` | string | `local` | Runtime backend: `local`, `docker`, `opensandbox`, `kubernetes`, `ec2` |
 | `opensandbox_url` | string | — | OpenSandbox API base URL (opensandbox backend) |
 | `opensandbox_api_key` | string | — | OpenSandbox API key |
 
@@ -121,6 +136,43 @@ format = "json"                        # Log format: json, pretty
 | `context` | string | — | Kubeconfig context |
 
 See [Kubernetes Deployment](../deployment/kubernetes.md) for full setup instructions.
+
+### `[runtime.ec2]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `region` | string | `us-east-1` | AWS region for instances |
+| `default_ami` | string | -- | Default AMI for agent instances |
+| `instance_type` | string | `t3.medium` | EC2 instance type |
+| `subnet_id` | string | -- | VPC subnet ID |
+| `security_group_ids` | string[] | `[]` | Security group IDs |
+| `ssh_user` | string | `ubuntu` | SSH user on the AMI |
+| `ssh_port` | u16 | `22` | SSH port |
+| `ssh_timeout_secs` | u32 | `120` | Timeout waiting for SSH readiness |
+| `key_pair_name` | string | -- | AWS key pair name (empty = ephemeral keys) |
+| `iam_instance_profile` | string | -- | IAM instance profile ARN |
+| `root_volume_size_gb` | u32 | `30` | Root EBS volume size in GB |
+| `root_volume_type` | string | `gp3` | EBS volume type |
+| `terminate_on_delete` | bool | `true` | Terminate instance on sandbox deletion |
+| `stop_on_pause` | bool | `true` | Stop instance on sandbox pause |
+| `startup_timeout_secs` | u32 | `300` | Max time to wait for instance startup |
+
+See [AWS EC2 Deployment](../deployment/ec2.md) for full setup instructions.
+
+### `[packer]`
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `binary_path` | string | `packer` | Path to the Packer binary |
+| `auto_install` | bool | `true` | Auto-install Packer if not found |
+| `work_dir` | string | `/tmp/ciab-packer` | Working directory for builds |
+| `default_region` | string | `us-east-1` | Default AWS region for AMI builds |
+| `build_instance_type` | string | `t3.medium` | Instance type for build instances |
+| `build_subnet_id` | string | -- | VPC subnet for build instances |
+| `build_timeout_secs` | u32 | `1800` | Build process timeout |
+| `template_source` | string | `builtin://default-ec2` | Packer template source |
+
+See [Packer Image Builder](../deployment/packer.md) for full documentation.
 
 ### `[agents]`
 
@@ -172,3 +224,18 @@ See [Kubernetes Deployment](../deployment/kubernetes.md) for full setup instruct
 |-----|------|---------|-------------|
 | `level` | string | `info` | Log level |
 | `format` | string | `json` | Output format: `json` or `pretty` |
+
+## Config Resolution Chain
+
+CIAB supports zero-config startup. When no explicit config file is provided, configuration is resolved through a 5-step chain where each step overrides values from the previous:
+
+1. **Built-in defaults** -- Sensible defaults for all fields (local runtime, port 8080, etc.)
+2. **`./config.toml`** -- Config file in the current working directory
+3. **`~/.config/ciab/config.toml`** -- User-level config file
+4. **Environment variables** -- `CIAB_PORT`, `CIAB_RUNTIME_BACKEND`, etc. (see [Environment Variables](environment-variables.md))
+5. **CLI flags / builder overrides** -- Values set via CLI flags or `CiabEngineBuilder`
+
+This means running `ciab server start` with no arguments works out of the box using built-in defaults.
+
+!!! tip
+    Use `ciab config show` to see the resolved configuration after all sources are merged.

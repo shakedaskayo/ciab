@@ -75,3 +75,17 @@ Returns `200 OK` if the server is ready to accept requests (database connected, 
 | File downloads | `application/octet-stream` |
 | File uploads | Raw bytes in request body |
 | SSE streams | `text/event-stream` |
+
+## API Sections
+
+| Section | Description |
+|---------|-------------|
+| [Sandboxes](sandboxes.md) | Sandbox lifecycle management |
+| [Sessions](sessions.md) | Chat session management |
+| [Execution](exec.md) | Command execution |
+| [Files](files.md) | File operations |
+| [Credentials](credentials.md) | Credential management |
+| [OAuth](oauth.md) | OAuth flows |
+| [Workspaces](workspaces.md) | Workspace management |
+| [Images](images.md) | Machine image builds (Packer / AMI) |
+| [Streaming](streaming.md) | SSE event streams |
