@@ -14,3 +14,7 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 toml = { workspace = true }
 axum = { workspace = true }
+dirs-next = "2"
+reqwest = { workspace = true }
+git2 = "0.19"
+tempfile = "3"
