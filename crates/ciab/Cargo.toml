@@ -1,0 +1,44 @@
+[package]
+name = "ciab"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CIAB — Manage coding agent sandboxes with a single Rust API"
+
+[features]
+default = ["local"]
+local = ["dep:ciab-sandbox"]
+ec2 = ["dep:ciab-sandbox-ec2"]
+kubernetes = ["dep:ciab-sandbox-k8s"]
+packer = ["dep:ciab-packer"]
+full = ["local", "ec2", "kubernetes", "packer"]
+
+[dependencies]
+ciab-core = { workspace = true }
+ciab-db = { workspace = true }
+ciab-streaming = { workspace = true }
+ciab-credentials = { workspace = true }
+ciab-provisioning = { workspace = true }
+
+# Feature-gated runtime backends
+ciab-sandbox = { workspace = true, optional = true }
+ciab-sandbox-ec2 = { workspace = true, optional = true }
+ciab-sandbox-k8s = { workspace = true, optional = true }
+ciab-packer = { workspace = true, optional = true }
+
+# Agent providers (always available)
+ciab-agent-claude = { workspace = true }
+ciab-agent-codex = { workspace = true }
+ciab-agent-gemini = { workspace = true }
+ciab-agent-cursor = { workspace = true }
+
+tokio = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+hex = "0.4"
+rand = "0.8"

@@ -1043,6 +1043,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "ciab"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "ciab-agent-claude",
+ "ciab-agent-codex",
+ "ciab-agent-cursor",
+ "ciab-agent-gemini",
+ "ciab-core",
+ "ciab-credentials",
+ "ciab-db",
+ "ciab-packer",
+ "ciab-provisioning",
+ "ciab-sandbox",
+ "ciab-sandbox-ec2",
+ "ciab-sandbox-k8s",
+ "ciab-streaming",
+ "hex",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "ciab-agent-claude"
 version = "0.1.0"
 dependencies = [
