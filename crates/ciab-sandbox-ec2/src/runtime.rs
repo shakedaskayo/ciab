@@ -565,7 +565,7 @@ impl SandboxRuntime for Ec2Runtime {
         let (mem_out, _, _) = session
             .exec("free -m | awk '/Mem:/{printf \"%s %s\", $3, $2}'")
             .await?;
-        let mem_parts: Vec<&str> = mem_out.trim().split_whitespace().collect();
+        let mem_parts: Vec<&str> = mem_out.split_whitespace().collect();
         let mem_used: u32 = mem_parts.first().and_then(|s| s.parse().ok()).unwrap_or(0);
         let mem_total: u32 = mem_parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
 
@@ -573,7 +573,7 @@ impl SandboxRuntime for Ec2Runtime {
         let (disk_out, _, _) = session
             .exec("df -m / | awk 'NR==2{printf \"%s %s\", $3, $2}'")
             .await?;
-        let disk_parts: Vec<&str> = disk_out.trim().split_whitespace().collect();
+        let disk_parts: Vec<&str> = disk_out.split_whitespace().collect();
         let disk_used: u32 = disk_parts.first().and_then(|s| s.parse().ok()).unwrap_or(0);
         let disk_total: u32 = disk_parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
 

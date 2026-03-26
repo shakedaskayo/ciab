@@ -778,7 +778,7 @@ impl AppConfig {
         toml::from_str(content)
     }
 
-    pub fn from_str(content: &str) -> Result<Self, toml::de::Error> {
+    pub fn parse(content: &str) -> Result<Self, toml::de::Error> {
         toml::from_str(content)
     }
 

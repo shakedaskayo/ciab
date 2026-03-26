@@ -126,7 +126,7 @@ impl CiabEngine {
         }
 
         // Try all other runtimes
-        for (_, runtime) in &self.runtimes {
+        for runtime in self.runtimes.values() {
             match runtime.get_sandbox(id).await {
                 Ok(info) => return Ok(info),
                 Err(CiabError::SandboxNotFound(_)) => continue,

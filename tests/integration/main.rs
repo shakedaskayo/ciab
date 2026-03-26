@@ -315,6 +315,8 @@ fn test_config() -> AppConfig {
             local_workdir: None,
             local_max_processes: None,
             kubernetes: None,
+            ec2: None,
+            packer: None,
         },
         agents: AgentsConfig {
             default_provider: "mock-agent".to_string(),
@@ -385,6 +387,7 @@ async fn setup_test_app() -> (axum::Router, Arc<Database>, Arc<dyn SandboxRuntim
         session_permissions: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
         pending_user_inputs: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
         session_queues: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+        image_builder: None,
     };
 
     let router = build_router(state);
@@ -1873,6 +1876,7 @@ async fn setup_test_app_with_providers() -> (axum::Router, Arc<Database>, Arc<dy
         session_permissions: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
         pending_user_inputs: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
         session_queues: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+        image_builder: None,
     };
 
     let router = build_router(state);
