@@ -142,6 +142,77 @@ fn default_request_timeout() -> u64 {
     300
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Ec2Config {
+    #[serde(default = "default_ec2_region")]
+    pub region: String,
+    pub default_ami: Option<String>,
+    #[serde(default = "default_ec2_instance_type")]
+    pub instance_type: String,
+    pub subnet_id: Option<String>,
+    #[serde(default)]
+    pub security_group_ids: Vec<String>,
+    #[serde(default = "default_ec2_ssh_user")]
+    pub ssh_user: String,
+    #[serde(default = "default_ec2_ssh_port")]
+    pub ssh_port: u16,
+    pub iam_instance_profile: Option<String>,
+    #[serde(default = "default_ec2_root_volume_gb")]
+    pub root_volume_size_gb: u32,
+    #[serde(default = "default_ec2_ready_timeout")]
+    pub instance_ready_timeout_secs: u64,
+    #[serde(default)]
+    pub tags: HashMap<String, String>,
+}
+
+fn default_ec2_region() -> String {
+    "us-east-1".to_string()
+}
+fn default_ec2_instance_type() -> String {
+    "t3.medium".to_string()
+}
+fn default_ec2_ssh_user() -> String {
+    "ubuntu".to_string()
+}
+fn default_ec2_ssh_port() -> u16 {
+    22
+}
+fn default_ec2_root_volume_gb() -> u32 {
+    20
+}
+fn default_ec2_ready_timeout() -> u64 {
+    180
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PackerConfig {
+    #[serde(default = "default_packer_binary")]
+    pub binary: String,
+    #[serde(default)]
+    pub auto_install: bool,
+    #[serde(default = "default_packer_cache_dir")]
+    pub template_cache_dir: String,
+    #[serde(default = "default_packer_cache_ttl")]
+    pub template_cache_ttl_secs: u64,
+    #[serde(default = "default_packer_template")]
+    pub default_template: String,
+    #[serde(default)]
+    pub variables: HashMap<String, String>,
+}
+
+fn default_packer_binary() -> String {
+    "packer".to_string()
+}
+fn default_packer_cache_dir() -> String {
+    "/tmp/ciab-packer-cache".to_string()
+}
+fn default_packer_cache_ttl() -> u64 {
+    3600
+}
+fn default_packer_template() -> String {
+    "builtin://default-ec2".to_string()
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct RuntimeConfig {
     /// Runtime backend: "opensandbox", "docker", "local", "kubernetes"
@@ -164,6 +235,12 @@ pub struct RuntimeConfig {
     /// Kubernetes backend configuration (only for kubernetes backend)
     #[serde(default)]
     pub kubernetes: Option<KubernetesConfig>,
+    /// EC2 backend configuration (only for ec2 backend)
+    #[serde(default)]
+    pub ec2: Option<Ec2Config>,
+    /// Packer image builder configuration
+    #[serde(default)]
+    pub packer: Option<PackerConfig>,
 }
 
 fn default_runtime_backend() -> String {
