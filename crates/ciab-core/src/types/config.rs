@@ -771,3 +771,80 @@ pub struct LlmProviderSeedConfig {
     #[serde(default)]
     pub default_model: Option<String>,
 }
+
+impl AppConfig {
+    pub fn load_default() -> Result<Self, toml::de::Error> {
+        let content = include_str!("../../../../config.default.toml");
+        toml::from_str(content)
+    }
+
+    pub fn from_str(content: &str) -> Result<Self, toml::de::Error> {
+        toml::from_str(content)
+    }
+
+    pub async fn load(explicit_source: Option<&str>) -> crate::error::CiabResult<Self> {
+        use crate::resolve::{parse_source_string, resolve_resource};
+
+        if let Some(source) = explicit_source {
+            let src = parse_source_string(source);
+            let content = resolve_resource(&src).await?;
+            return toml::from_str(&content).map_err(|e| {
+                crate::error::CiabError::ConfigError(format!("Failed to parse config: {}", e))
+            });
+        }
+
+        if let Ok(env_source) = std::env::var("CIAB_CONFIG") {
+            let src = parse_source_string(&env_source);
+            let content = resolve_resource(&src).await?;
+            return toml::from_str(&content).map_err(|e| {
+                crate::error::CiabError::ConfigError(format!("Failed to parse config: {}", e))
+            });
+        }
+
+        let local_config = std::path::Path::new("config.toml");
+        if local_config.exists() {
+            let content = tokio::fs::read_to_string(local_config).await.map_err(|e| {
+                crate::error::CiabError::ConfigError(format!(
+                    "Failed to read config.toml: {}",
+                    e
+                ))
+            })?;
+            return toml::from_str(&content).map_err(|e| {
+                crate::error::CiabError::ConfigError(format!(
+                    "Failed to parse config.toml: {}",
+                    e
+                ))
+            });
+        }
+
+        if let Some(home) = dirs_next::home_dir() {
+            let user_config = home.join(".config").join("ciab").join("config.toml");
+            if user_config.exists() {
+                let content =
+                    tokio::fs::read_to_string(&user_config)
+                        .await
+                        .map_err(|e| {
+                            crate::error::CiabError::ConfigError(format!(
+                                "Failed to read {}: {}",
+                                user_config.display(),
+                                e
+                            ))
+                        })?;
+                return toml::from_str(&content).map_err(|e| {
+                    crate::error::CiabError::ConfigError(format!(
+                        "Failed to parse {}: {}",
+                        user_config.display(),
+                        e
+                    ))
+                });
+            }
+        }
+
+        Self::load_default().map_err(|e| {
+            crate::error::CiabError::ConfigError(format!(
+                "Failed to parse embedded default config: {}",
+                e
+            ))
+        })
+    }
+}
