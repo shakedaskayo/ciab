@@ -70,4 +70,6 @@ pub struct AppState {
     pub pending_user_inputs: Arc<RwLock<HashMap<String, PendingUserInput>>>,
     /// Per-session message queues. Messages are processed FIFO, one at a time per session.
     pub session_queues: Arc<RwLock<HashMap<Uuid, SessionQueue>>>,
+    /// Optional image builder (e.g., Packer). Present when [packer] is configured.
+    pub image_builder: Option<Arc<dyn ciab_core::traits::image_builder::ImageBuilder>>,
 }

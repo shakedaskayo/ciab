@@ -6,6 +6,7 @@ pub mod files;
 pub mod gateway;
 pub mod health;
 pub mod hooks;
+pub mod images;
 pub mod llm_providers;
 pub mod oauth;
 pub mod permissions;

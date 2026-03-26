@@ -209,9 +209,14 @@ pub fn build_router(state: AppState) -> axum::Router {
         )
         // Agents
         .route("/agents", get(routes::agents::list_providers))
+        .route("/agents/status", get(routes::agents::provider_status))
         .route(
             "/agents/{provider}/commands",
             get(routes::agents::get_slash_commands),
+        )
+        .route(
+            "/agents/{provider}/install",
+            post(routes::agents::install_provider),
         )
         // Gateway
         .route(
@@ -313,6 +318,17 @@ pub fn build_router(state: AppState) -> axum::Router {
         .route(
             "/channels/{id}/messages",
             get(routes::channels::channel_messages),
+        )
+        // Images (Packer image builder)
+        .route("/images/build", post(routes::images::build_image))
+        .route("/images", get(routes::images::list_images))
+        .route(
+            "/images/builds/{build_id}",
+            get(routes::images::get_build_status),
+        )
+        .route(
+            "/images/{image_id}",
+            axum::routing::delete(routes::images::delete_image),
         )
         // Auth middleware on all API routes
         .layer(axum::middleware::from_fn_with_state(

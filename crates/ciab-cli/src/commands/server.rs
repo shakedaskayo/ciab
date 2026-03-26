@@ -263,6 +263,7 @@ pub async fn execute(command: ServerCommand) -> Result<()> {
                 session_permissions: Arc::new(RwLock::new(std::collections::HashMap::new())),
                 pending_user_inputs: Arc::new(RwLock::new(std::collections::HashMap::new())),
                 session_queues: Arc::new(RwLock::new(std::collections::HashMap::new())),
+                image_builder: None,
             };
 
             // 10. Start the API server.
