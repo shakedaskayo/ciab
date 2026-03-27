@@ -3,6 +3,8 @@ name = "ciab-packer"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 description = "HashiCorp Packer image builder for CIAB"
 
 [dependencies]

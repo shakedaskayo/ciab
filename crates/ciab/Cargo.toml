@@ -3,7 +3,13 @@ name = "ciab"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
 description = "CIAB — Manage coding agent sandboxes with a single Rust API"
+readme = "../../README.md"
 
 [features]
 default = ["local"]

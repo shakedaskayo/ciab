@@ -774,7 +774,7 @@ pub struct LlmProviderSeedConfig {
 
 impl AppConfig {
     pub fn load_default() -> Result<Self, toml::de::Error> {
-        let content = include_str!("../../../../config.default.toml");
+        let content = include_str!("../../config.default.toml");
         toml::from_str(content)
     }
 

@@ -3,6 +3,7 @@ name = "ciab-desktop"
 version = "0.1.0"
 edition = "2021"
 description = "CIAB Desktop Application"
+publish = false
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

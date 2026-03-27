@@ -152,9 +152,9 @@ async fn resolve_git(url: &str, subpath: &str, ref_: Option<&str>) -> CiabResult
 fn resolve_builtin(name: &str) -> CiabResult<String> {
     match name {
         "default-ec2" => Ok(
-            include_str!("../../../templates/packer/default-ec2.pkr.hcl").to_string(),
+            include_str!("../templates/default-ec2.pkr.hcl").to_string(),
         ),
-        "default-config" => Ok(include_str!("../../../config.default.toml").to_string()),
+        "default-config" => Ok(include_str!("../config.default.toml").to_string()),
         _ => Err(CiabError::ResourceResolutionError(format!(
             "Unknown builtin resource: {}",
             name

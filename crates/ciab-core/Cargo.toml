@@ -1,7 +1,11 @@
 [package]
 name = "ciab-core"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Core types, traits, and errors for CIAB"
 
 [dependencies]
 serde = { workspace = true }

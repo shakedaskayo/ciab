@@ -67,6 +67,27 @@ The CIAB desktop app provides a full GUI for managing sandboxes, workspaces, and
 
 The desktop app includes a built-in CIAB server, so you don't need to run `ciab server start` separately.
 
+## Install from crates.io
+
+If you have [Rust](https://rustup.rs) installed, you can install directly from crates.io:
+
+```bash
+cargo install ciab-cli
+```
+
+This builds and installs the `ciab` binary to `~/.cargo/bin/`.
+
+### As a Rust library
+
+To use CIAB as a library in your Rust project:
+
+```toml
+[dependencies]
+ciab = "0.1"
+```
+
+See the [Rust Library](../architecture/rust-library.md) docs for feature flags and usage examples.
+
 ## Build from Source
 
 Requires [Rust](https://rustup.rs) (stable, latest).

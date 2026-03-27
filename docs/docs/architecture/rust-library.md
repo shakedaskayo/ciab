@@ -8,7 +8,7 @@ The `ciab` crate is a facade that re-exports types from the internal workspace c
 
 ```toml
 [dependencies]
-ciab = "0.2"
+ciab = "0.1"
 ```
 
 ## Feature Flags
@@ -25,7 +25,7 @@ The library uses feature flags to control which runtime backends are compiled in
 
 ```toml
 # Just local runtime (default)
-ciab = "0.2"
+ciab = "0.1"
 
 # EC2 + Packer support
 ciab = { version = "0.2", features = ["ec2", "packer"] }

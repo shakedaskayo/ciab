@@ -145,10 +145,77 @@ jobs:
           name: ciab-desktop-macos
           path: dist/*
 
+  # ── Publish to crates.io ────────────────────────────────────────────
+  publish-crates:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Publish crates (dependency order)
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          publish() {
+            local crate=$1
+            echo "Publishing $crate..."
+            local output
+            # --no-verify: we already built/tested in CI
+            if output=$(cargo publish -p "$crate" --no-verify 2>&1); then
+              echo "$crate published successfully."
+            elif echo "$output" | grep -q "already uploaded"; then
+              echo "$crate already published at this version, skipping."
+            else
+              echo "$output"
+              echo "Failed to publish $crate"
+              exit 1
+            fi
+            # Give crates.io index time to update
+            sleep 30
+          }
+
+          # Layer 1: no internal deps
+          publish ciab-core
+
+          # Layer 2: depends on ciab-core only
+          publish ciab-db
+          publish ciab-streaming
+          publish ciab-sandbox
+          publish ciab-sandbox-k8s
+          publish ciab-sandbox-ec2
+          publish ciab-agent-claude
+          publish ciab-agent-codex
+          publish ciab-agent-gemini
+          publish ciab-agent-cursor
+          publish ciab-packer
+
+          # Layer 3: depends on ciab-core + ciab-db
+          publish ciab-credentials
+          publish ciab-gateway
+          publish ciab-channels
+
+          # Layer 4: depends on ciab-sandbox + ciab-credentials
+          publish ciab-provisioning
+
+          # Layer 5: depends on many internal crates
+          publish ciab-api
+
+          # Layer 6: facade crate
+          publish ciab
+
+          # Layer 7: CLI binary
+          publish ciab-cli
+
   # ── GitHub Release ──────────────────────────────────────────────────
   release:
     name: Publish Release
-    needs: [build-cli, build-desktop]
+    needs: [build-cli, build-desktop, publish-crates]
     if: always() && needs.build-cli.result == 'success'
     runs-on: ubuntu-latest
     steps:
