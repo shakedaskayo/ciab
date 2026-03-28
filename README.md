@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/docs/assets/logo.png" alt="CIAB" width="220">
+  <img src="https://raw.githubusercontent.com/shakedaskayo/ciab/main/docs/docs/assets/logo.png" alt="CIAB" width="220">
 </p>
 
 <p align="center">
