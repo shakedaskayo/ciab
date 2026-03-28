@@ -804,32 +804,23 @@ impl AppConfig {
         let local_config = std::path::Path::new("config.toml");
         if local_config.exists() {
             let content = tokio::fs::read_to_string(local_config).await.map_err(|e| {
-                crate::error::CiabError::ConfigError(format!(
-                    "Failed to read config.toml: {}",
-                    e
-                ))
+                crate::error::CiabError::ConfigError(format!("Failed to read config.toml: {}", e))
             })?;
             return toml::from_str(&content).map_err(|e| {
-                crate::error::CiabError::ConfigError(format!(
-                    "Failed to parse config.toml: {}",
-                    e
-                ))
+                crate::error::CiabError::ConfigError(format!("Failed to parse config.toml: {}", e))
             });
         }
 
         if let Some(home) = dirs_next::home_dir() {
             let user_config = home.join(".config").join("ciab").join("config.toml");
             if user_config.exists() {
-                let content =
-                    tokio::fs::read_to_string(&user_config)
-                        .await
-                        .map_err(|e| {
-                            crate::error::CiabError::ConfigError(format!(
-                                "Failed to read {}: {}",
-                                user_config.display(),
-                                e
-                            ))
-                        })?;
+                let content = tokio::fs::read_to_string(&user_config).await.map_err(|e| {
+                    crate::error::CiabError::ConfigError(format!(
+                        "Failed to read {}: {}",
+                        user_config.display(),
+                        e
+                    ))
+                })?;
                 return toml::from_str(&content).map_err(|e| {
                     crate::error::CiabError::ConfigError(format!(
                         "Failed to parse {}: {}",

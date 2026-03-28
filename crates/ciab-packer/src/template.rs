@@ -46,8 +46,8 @@ pub async fn write_temp_template(content: &str) -> CiabResult<PathBuf> {
     let dir = tempfile::tempdir()
         .map_err(|e| CiabError::PackerError(format!("Failed to create temp dir: {}", e)))?;
     let path = dir.keep().join("template.pkr.hcl");
-    tokio::fs::write(&path, content).await.map_err(|e| {
-        CiabError::PackerError(format!("Failed to write temp template: {}", e))
-    })?;
+    tokio::fs::write(&path, content)
+        .await
+        .map_err(|e| CiabError::PackerError(format!("Failed to write temp template: {}", e)))?;
     Ok(path)
 }

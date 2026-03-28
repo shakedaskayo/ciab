@@ -432,9 +432,10 @@ impl CiabEngineBuilder {
         let image_builder = if self.image_builder.is_some() {
             self.image_builder
         } else if let Some(ref packer_config) = config.runtime.packer {
-            Some(Arc::new(ciab_packer::PackerImageBuilder::new(
-                packer_config.clone(),
-            )) as Arc<dyn ImageBuilder>)
+            Some(
+                Arc::new(ciab_packer::PackerImageBuilder::new(packer_config.clone()))
+                    as Arc<dyn ImageBuilder>,
+            )
         } else {
             None
         };

@@ -2950,7 +2950,10 @@ auto_detect_ollama = false
 
     let config: AppConfig = toml::from_str(toml_content).expect("should parse Packer config");
 
-    let packer = config.runtime.packer.expect("packer config should be present");
+    let packer = config
+        .runtime
+        .packer
+        .expect("packer config should be present");
     assert_eq!(packer.binary, "/usr/local/bin/packer");
     assert!(packer.auto_install);
     assert_eq!(packer.template_cache_dir, "/var/cache/ciab-packer");
@@ -2959,8 +2962,14 @@ auto_detect_ollama = false
         packer.default_template,
         "git::https://github.com/org/templates.git//ec2.pkr.hcl?ref=v2"
     );
-    assert_eq!(packer.variables.get("region"), Some(&"eu-west-1".to_string()));
-    assert_eq!(packer.variables.get("base_ami"), Some(&"ami-eurobase".to_string()));
+    assert_eq!(
+        packer.variables.get("region"),
+        Some(&"eu-west-1".to_string())
+    );
+    assert_eq!(
+        packer.variables.get("base_ami"),
+        Some(&"ami-eurobase".to_string())
+    );
 }
 
 // -- Resource Resolver --
@@ -2971,7 +2980,9 @@ fn test_resource_resolver_parse_source_string() {
 
     // File path
     let src = parse_source_string("/etc/ciab/config.toml");
-    assert!(matches!(src, ResourceSource::FilePath(p) if p.to_str() == Some("/etc/ciab/config.toml")));
+    assert!(
+        matches!(src, ResourceSource::FilePath(p) if p.to_str() == Some("/etc/ciab/config.toml"))
+    );
 
     // URL
     let src = parse_source_string("https://example.com/config.toml");
@@ -3009,7 +3020,9 @@ async fn test_resource_resolver_builtin_default_ec2() {
     use ciab_core::resolve::{parse_source_string, resolve_resource};
 
     let src = parse_source_string("builtin://default-ec2");
-    let content = resolve_resource(&src).await.expect("builtin default-ec2 should resolve");
+    let content = resolve_resource(&src)
+        .await
+        .expect("builtin default-ec2 should resolve");
 
     // Verify it's a valid Packer template
     assert!(content.contains("packer {"));
@@ -3025,7 +3038,9 @@ async fn test_resource_resolver_builtin_default_config() {
     use ciab_core::resolve::{parse_source_string, resolve_resource};
 
     let src = parse_source_string("builtin://default-config");
-    let content = resolve_resource(&src).await.expect("builtin default-config should resolve");
+    let content = resolve_resource(&src)
+        .await
+        .expect("builtin default-config should resolve");
 
     // Verify it's a valid TOML config
     assert!(content.contains("[server]"));
@@ -3034,7 +3049,8 @@ async fn test_resource_resolver_builtin_default_config() {
     assert!(content.contains("[credentials]"));
 
     // Should parse as AppConfig
-    let _config: AppConfig = toml::from_str(&content).expect("builtin config should parse as AppConfig");
+    let _config: AppConfig =
+        toml::from_str(&content).expect("builtin config should parse as AppConfig");
 }
 
 #[tokio::test]
@@ -3084,7 +3100,10 @@ fn test_image_build_request_serialization() {
     // Deserialize back
     let parsed: ImageBuildRequest = serde_json::from_str(&json).expect("should deserialize");
     assert!(parsed.template.is_some());
-    assert_eq!(parsed.variables.get("region"), Some(&"us-east-1".to_string()));
+    assert_eq!(
+        parsed.variables.get("region"),
+        Some(&"us-east-1".to_string())
+    );
     assert_eq!(parsed.agent_provider, Some("claude-code".to_string()));
 }
 
@@ -3194,8 +3213,11 @@ async fn setup_test_app_with_image_builder() -> (axum::Router, Arc<Database>, Ar
     let runtime: Arc<MockRuntime> = Arc::new(MockRuntime::new());
     let stream_handler: Arc<dyn StreamHandler> = Arc::new(StreamBroker::new(100));
     let credential_store = Arc::new(
-        CredentialStore::new(db.clone(), "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
-            .unwrap(),
+        CredentialStore::new(
+            db.clone(),
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        )
+        .unwrap(),
     );
     let provisioning = Arc::new(ProvisioningPipeline::new(
         runtime.clone(),
@@ -3264,7 +3286,10 @@ async fn test_image_build_endpoint() {
     let result = response_json(response).await;
     assert!(result["build_id"].is_string());
     assert_eq!(result["status"], "succeeded");
-    assert!(result["image_id"].as_str().unwrap().starts_with("ami-mock-"));
+    assert!(result["image_id"]
+        .as_str()
+        .unwrap()
+        .starts_with("ami-mock-"));
     assert!(result["logs"].as_array().unwrap().len() > 0);
 }
 
@@ -3280,7 +3305,11 @@ async fn test_image_list_endpoint() {
 
     let app_clone = app.clone();
     let response = app_clone
-        .oneshot(json_request("POST", "/api/v1/images/build", Some(build_body)))
+        .oneshot(json_request(
+            "POST",
+            "/api/v1/images/build",
+            Some(build_body),
+        ))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::ACCEPTED);
@@ -3295,7 +3324,10 @@ async fn test_image_list_endpoint() {
     let body = response_json(response).await;
     let images = body.as_array().unwrap();
     assert_eq!(images.len(), 1);
-    assert!(images[0]["image_id"].as_str().unwrap().starts_with("ami-mock-"));
+    assert!(images[0]["image_id"]
+        .as_str()
+        .unwrap()
+        .starts_with("ami-mock-"));
     assert_eq!(images[0]["provider"], "amazon-ebs");
 }
 
@@ -3310,7 +3342,11 @@ async fn test_image_build_status_endpoint() {
 
     let app_clone = app.clone();
     let response = app_clone
-        .oneshot(json_request("POST", "/api/v1/images/build", Some(build_body)))
+        .oneshot(json_request(
+            "POST",
+            "/api/v1/images/build",
+            Some(build_body),
+        ))
         .await
         .unwrap();
     let result = response_json(response).await;
@@ -3342,7 +3378,11 @@ async fn test_image_delete_endpoint() {
 
     let app_clone1 = app.clone();
     let response = app_clone1
-        .oneshot(json_request("POST", "/api/v1/images/build", Some(build_body)))
+        .oneshot(json_request(
+            "POST",
+            "/api/v1/images/build",
+            Some(build_body),
+        ))
         .await
         .unwrap();
     let result = response_json(response).await;
@@ -3392,8 +3432,8 @@ async fn test_image_endpoints_without_builder() {
 
 #[test]
 fn test_packer_image_builder_construction() {
-    use ciab_packer::PackerImageBuilder;
     use ciab_core::types::config::PackerConfig;
+    use ciab_packer::PackerImageBuilder;
 
     let config = PackerConfig {
         binary: "packer".to_string(),
@@ -3452,7 +3492,11 @@ async fn test_ciab_engine_default_build() {
         .build()
         .await;
 
-    assert!(engine.is_ok(), "CiabEngine default build failed: {:?}", engine.err());
+    assert!(
+        engine.is_ok(),
+        "CiabEngine default build failed: {:?}",
+        engine.err()
+    );
 
     let engine = engine.unwrap();
     assert_eq!(engine.config().runtime.backend, "local");
@@ -3546,7 +3590,7 @@ async fn test_ciab_engine_sandbox_lifecycle() {
 #[tokio::test]
 async fn test_ciab_engine_exec() {
     use ciab::CiabEngine;
-    use ciab_core::types::sandbox::{SandboxSpec, ExecRequest};
+    use ciab_core::types::sandbox::{ExecRequest, SandboxSpec};
 
     let engine = CiabEngine::builder()
         .config_default()
@@ -3636,11 +3680,21 @@ async fn test_ciab_engine_file_operations() {
     let write_result = engine
         .write_file(&sandbox.id, "/tmp/ciab-test-file.txt", content)
         .await;
-    assert!(write_result.is_ok(), "write_file failed: {:?}", write_result.err());
+    assert!(
+        write_result.is_ok(),
+        "write_file failed: {:?}",
+        write_result.err()
+    );
 
     // Read it back
-    let read_result = engine.read_file(&sandbox.id, "/tmp/ciab-test-file.txt").await;
-    assert!(read_result.is_ok(), "read_file failed: {:?}", read_result.err());
+    let read_result = engine
+        .read_file(&sandbox.id, "/tmp/ciab-test-file.txt")
+        .await;
+    assert!(
+        read_result.is_ok(),
+        "read_file failed: {:?}",
+        read_result.err()
+    );
     assert_eq!(read_result.unwrap(), content);
 
     // List files

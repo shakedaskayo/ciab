@@ -80,10 +80,7 @@ chown -R {user}:{user} /home/{user}/.ssh
                 .key("ciab-sandbox-id")
                 .value(sandbox_id.to_string())
                 .build(),
-            Tag::builder()
-                .key("ciab-managed")
-                .value("true")
-                .build(),
+            Tag::builder().key("ciab-managed").value("true").build(),
             Tag::builder()
                 .key("Name")
                 .value(format!("ciab-{name}"))
@@ -137,11 +134,7 @@ chown -R {user}:{user} /home/{user}/.ssh
     }
 
     /// Wait until SSH is reachable on the instance.
-    async fn wait_for_ssh(
-        &self,
-        host: &str,
-        key: Arc<PrivateKey>,
-    ) -> CiabResult<()> {
+    async fn wait_for_ssh(&self, host: &str, key: Arc<PrivateKey>) -> CiabResult<()> {
         let timeout = std::time::Duration::from_secs(self.config.instance_ready_timeout_secs);
         let start = Instant::now();
         let port = self.config.ssh_port;
@@ -321,7 +314,10 @@ impl SandboxRuntime for Ec2Runtime {
             state: SandboxState::Running,
             persistence: spec.persistence.clone(),
             agent_provider: spec.agent_provider.clone(),
-            endpoint_url: Some(format!("ssh://{}@{}:{}", self.config.ssh_user, public_ip, self.config.ssh_port)),
+            endpoint_url: Some(format!(
+                "ssh://{}@{}:{}",
+                self.config.ssh_user, public_ip, self.config.ssh_port
+            )),
             resource_stats: None,
             labels: {
                 let mut labels = spec.labels.clone();
@@ -667,19 +663,37 @@ fn parse_mode_string(s: &str) -> u32 {
     let mut mode: u32 = 0;
 
     // Owner
-    if chars[1] == 'r' { mode |= 0o400; }
-    if chars[2] == 'w' { mode |= 0o200; }
-    if chars[3] == 'x' || chars[3] == 's' { mode |= 0o100; }
+    if chars[1] == 'r' {
+        mode |= 0o400;
+    }
+    if chars[2] == 'w' {
+        mode |= 0o200;
+    }
+    if chars[3] == 'x' || chars[3] == 's' {
+        mode |= 0o100;
+    }
 
     // Group
-    if chars[4] == 'r' { mode |= 0o040; }
-    if chars[5] == 'w' { mode |= 0o020; }
-    if chars[6] == 'x' || chars[6] == 's' { mode |= 0o010; }
+    if chars[4] == 'r' {
+        mode |= 0o040;
+    }
+    if chars[5] == 'w' {
+        mode |= 0o020;
+    }
+    if chars[6] == 'x' || chars[6] == 's' {
+        mode |= 0o010;
+    }
 
     // Other
-    if chars[7] == 'r' { mode |= 0o004; }
-    if chars[8] == 'w' { mode |= 0o002; }
-    if chars[9] == 'x' || chars[9] == 't' { mode |= 0o001; }
+    if chars[7] == 'r' {
+        mode |= 0o004;
+    }
+    if chars[8] == 'w' {
+        mode |= 0o002;
+    }
+    if chars[9] == 'x' || chars[9] == 't' {
+        mode |= 0o001;
+    }
 
     mode
 }

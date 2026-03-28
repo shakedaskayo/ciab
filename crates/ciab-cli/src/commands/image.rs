@@ -62,10 +62,7 @@ pub async fn execute(
                 let mut variables = serde_json::Map::new();
                 for kv in &var {
                     if let Some((k, v)) = kv.split_once('=') {
-                        variables.insert(
-                            k.to_string(),
-                            serde_json::Value::String(v.to_string()),
-                        );
+                        variables.insert(k.to_string(), serde_json::Value::String(v.to_string()));
                     } else {
                         anyhow::bail!("Invalid --var format '{}', expected key=value", kv);
                     }

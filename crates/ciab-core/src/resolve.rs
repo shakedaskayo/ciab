@@ -59,20 +59,14 @@ pub async fn resolve_resource(source: &ResourceSource) -> CiabResult<String> {
     match source {
         ResourceSource::FilePath(path) => resolve_file(path).await,
         ResourceSource::Url(url) => resolve_url(url).await,
-        ResourceSource::Git { url, path, ref_ } => {
-            resolve_git(url, path, ref_.as_deref()).await
-        }
+        ResourceSource::Git { url, path, ref_ } => resolve_git(url, path, ref_.as_deref()).await,
         ResourceSource::Builtin(name) => resolve_builtin(name),
     }
 }
 
 async fn resolve_file(path: &Path) -> CiabResult<String> {
     tokio::fs::read_to_string(path).await.map_err(|e| {
-        CiabError::ResourceResolutionError(format!(
-            "Failed to read file {}: {}",
-            path.display(),
-            e
-        ))
+        CiabError::ResourceResolutionError(format!("Failed to read file {}: {}", path.display(), e))
     })
 }
 
@@ -91,10 +85,7 @@ async fn resolve_url(url: &str) -> CiabResult<String> {
     }
 
     response.text().await.map_err(|e| {
-        CiabError::ResourceResolutionError(format!(
-            "Failed to read response from {}: {}",
-            url, e
-        ))
+        CiabError::ResourceResolutionError(format!("Failed to read response from {}: {}", url, e))
     })
 }
 
@@ -125,15 +116,11 @@ async fn resolve_git(url: &str, subpath: &str, ref_: Option<&str>) -> CiabResult
 
         let file_path = if subpath.is_empty() {
             repo.workdir()
-                .ok_or_else(|| {
-                    CiabError::ResourceResolutionError("Bare repository".to_string())
-                })?
+                .ok_or_else(|| CiabError::ResourceResolutionError("Bare repository".to_string()))?
                 .to_path_buf()
         } else {
             repo.workdir()
-                .ok_or_else(|| {
-                    CiabError::ResourceResolutionError("Bare repository".to_string())
-                })?
+                .ok_or_else(|| CiabError::ResourceResolutionError("Bare repository".to_string()))?
                 .join(&subpath)
         };
 
@@ -151,9 +138,7 @@ async fn resolve_git(url: &str, subpath: &str, ref_: Option<&str>) -> CiabResult
 
 fn resolve_builtin(name: &str) -> CiabResult<String> {
     match name {
-        "default-ec2" => Ok(
-            include_str!("../templates/default-ec2.pkr.hcl").to_string(),
-        ),
+        "default-ec2" => Ok(include_str!("../templates/default-ec2.pkr.hcl").to_string()),
         "default-config" => Ok(include_str!("../config.default.toml").to_string()),
         _ => Err(CiabError::ResourceResolutionError(format!(
             "Unknown builtin resource: {}",
@@ -177,9 +162,7 @@ mod tests {
     #[test]
     fn test_parse_url() {
         let source = parse_source_string("https://example.com/config.toml");
-        assert!(
-            matches!(source, ResourceSource::Url(u) if u == "https://example.com/config.toml")
-        );
+        assert!(matches!(source, ResourceSource::Url(u) if u == "https://example.com/config.toml"));
     }
 
     #[test]
@@ -190,9 +173,8 @@ mod tests {
 
     #[test]
     fn test_parse_git_full() {
-        let source = parse_source_string(
-            "git::https://github.com/org/repo.git//path/to/file.hcl?ref=main",
-        );
+        let source =
+            parse_source_string("git::https://github.com/org/repo.git//path/to/file.hcl?ref=main");
         match source {
             ResourceSource::Git { url, path, ref_ } => {
                 assert_eq!(url, "https://github.com/org/repo.git");
@@ -205,8 +187,7 @@ mod tests {
 
     #[test]
     fn test_parse_git_no_ref() {
-        let source =
-            parse_source_string("git::https://github.com/org/repo.git//template.hcl");
+        let source = parse_source_string("git::https://github.com/org/repo.git//template.hcl");
         match source {
             ResourceSource::Git { url, path, ref_ } => {
                 assert_eq!(url, "https://github.com/org/repo.git");
@@ -219,8 +200,7 @@ mod tests {
 
     #[test]
     fn test_parse_git_no_subpath() {
-        let source =
-            parse_source_string("git::https://github.com/org/repo.git?ref=v1.0");
+        let source = parse_source_string("git::https://github.com/org/repo.git?ref=v1.0");
         match source {
             ResourceSource::Git { url, path, ref_ } => {
                 assert_eq!(url, "https://github.com/org/repo.git");

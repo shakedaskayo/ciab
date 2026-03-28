@@ -13,9 +13,7 @@ use uuid::Uuid;
 use ciab_core::error::{CiabError, CiabResult};
 use ciab_core::traits::image_builder::ImageBuilder;
 use ciab_core::types::config::PackerConfig;
-use ciab_core::types::image::{
-    BuiltImage, ImageBuildRequest, ImageBuildResult, ImageBuildStatus,
-};
+use ciab_core::types::image::{BuiltImage, ImageBuildRequest, ImageBuildResult, ImageBuildStatus};
 
 use crate::template;
 
@@ -153,9 +151,10 @@ impl ImageBuilder for PackerImageBuilder {
             .spawn()
             .map_err(|e| CiabError::PackerError(format!("Failed to spawn packer: {}", e)))?;
 
-        let stdout = child.stdout.take().ok_or_else(|| {
-            CiabError::PackerError("Failed to capture packer stdout".to_string())
-        })?;
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or_else(|| CiabError::PackerError("Failed to capture packer stdout".to_string()))?;
 
         let builds = self.builds.clone();
         let images = self.images.clone();

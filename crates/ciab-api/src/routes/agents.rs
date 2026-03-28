@@ -102,12 +102,7 @@ pub async fn install_provider(
     // Run the install command via sh -c.
     let output = tokio::task::spawn_blocking({
         let cmd = install_cmd.clone();
-        move || {
-            Command::new("sh")
-                .arg("-c")
-                .arg(&cmd)
-                .output()
-        }
+        move || Command::new("sh").arg("-c").arg(&cmd).output()
     })
     .await
     .map_err(|e| CiabError::Internal(format!("Task join error: {e}")))?
@@ -171,11 +166,7 @@ fn detect_binary(binary: &str) -> (bool, Option<String>, Option<String>) {
         .map(|o| {
             let raw = String::from_utf8_lossy(&o.stdout).trim().to_string();
             // Take first line, strip common prefixes.
-            raw.lines()
-                .next()
-                .unwrap_or(&raw)
-                .trim()
-                .to_string()
+            raw.lines().next().unwrap_or(&raw).trim().to_string()
         });
 
     (true, path, version)

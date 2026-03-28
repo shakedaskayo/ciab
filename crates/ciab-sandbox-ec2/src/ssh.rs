@@ -107,10 +107,7 @@ impl SshSession {
     }
 
     /// Execute a command and stream stdout lines through an mpsc channel.
-    pub async fn exec_streaming(
-        &self,
-        command: &str,
-    ) -> CiabResult<mpsc::Receiver<String>> {
+    pub async fn exec_streaming(&self, command: &str) -> CiabResult<mpsc::Receiver<String>> {
         let mut channel = self
             .handle
             .channel_open_session()
@@ -160,9 +157,8 @@ impl SshSession {
     pub async fn write_file(&self, path: &str, content: &[u8]) -> CiabResult<()> {
         use base64::Engine;
         let encoded = base64::engine::general_purpose::STANDARD.encode(content);
-        let cmd = format!(
-            "mkdir -p \"$(dirname {path})\" && echo '{encoded}' | base64 -d > {path}"
-        );
+        let cmd =
+            format!("mkdir -p \"$(dirname {path})\" && echo '{encoded}' | base64 -d > {path}");
         let (_, stderr, code) = self.exec(&cmd).await?;
         if code != 0 {
             return Err(CiabError::SshError(format!(
