@@ -3290,7 +3290,7 @@ async fn test_image_build_endpoint() {
         .as_str()
         .unwrap()
         .starts_with("ami-mock-"));
-    assert!(result["logs"].as_array().unwrap().len() > 0);
+    assert!(!result["logs"].as_array().unwrap().is_empty());
 }
 
 #[tokio::test]
