@@ -6,7 +6,7 @@ The `ciab` CLI provides interactive access to all CIAB functionality.
 
 | Flag | Env Var | Default | Description |
 |------|---------|---------|-------------|
-| `--server-url` | `CIAB_SERVER_URL` | `http://localhost:8080` | CIAB server URL |
+| `--server-url` | `CIAB_SERVER_URL` | `http://localhost:9090` | CIAB server URL |
 | `--api-key` | `CIAB_API_KEY` | — | API key for authentication |
 | `--output` | — | `text` | Output format: `text`, `json` |
 | `--verbose` | — | — | Enable verbose output |

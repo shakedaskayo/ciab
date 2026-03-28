@@ -108,7 +108,7 @@ Browse and install agent skills from the [skills.sh](https://skills.sh) open reg
   <img src="docs/docs/assets/architecture.svg" alt="CIAB Architecture" width="100%">
 </p>
 
-**Clients** (CLI, REST API, desktop app, mobile browser, Slack/WhatsApp) connect to the **CIAB control plane** — an Axum-based server that handles auth, streaming, and orchestration. The control plane provisions sandboxes through a **9-step pipeline** (validate → prepare → create → start → mount → inject credentials → clone repos → run scripts → launch agent), streaming every step over **SSE** in real time.
+**Clients** (CLI, REST API, desktop app, mobile browser, Slack/WhatsApp) connect to the **CIAB control plane** — an Axum-based server that handles auth, streaming, and orchestration. The control plane provisions sandboxes through an **11-step pipeline** (validate → prepare image → resolve credentials → create → start → mount local dirs → inject credentials → clone repos → setup agent filesystem → run scripts → start agent), streaming every step over **SSE** in real time.
 
 <br>
 
@@ -267,7 +267,7 @@ crates/
   ciab-sandbox-k8s      Kubernetes runtime backend (Kata Containers support)
   ciab-sandbox-ec2      AWS EC2 runtime backend (ephemeral instances, SSH exec)
   ciab-streaming        SSE broker with event buffer and replay
-  ciab-provisioning     9-step sandbox provisioning pipeline
+  ciab-provisioning     11-step sandbox provisioning pipeline
   ciab-credentials      AES-256-GCM encrypted vault, OAuth2
   ciab-packer           HashiCorp Packer image builder (AMI builds)
   ciab-gateway          Web gateway + tunneling (bore, Cloudflare, ngrok, frp) + LAN/mDNS

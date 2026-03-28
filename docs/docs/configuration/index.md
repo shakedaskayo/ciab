@@ -9,7 +9,7 @@ Generate a default config with `ciab config init`.
 ```toml
 [server]
 host = "0.0.0.0"              # Bind address
-port = 8080                    # HTTP port
+port = 9090                    # HTTP port
 workers = 4                    # Worker threads (default: CPU count)
 request_timeout_secs = 300     # Request timeout
 cors_origins = ["*"]           # CORS allowed origins
@@ -93,7 +93,7 @@ format = "json"                        # Log format: json, pretty
 # auth_url = "https://github.com/login/oauth/authorize"
 # token_url = "https://github.com/login/oauth/access_token"
 # scopes = ["repo", "read:org"]
-# redirect_uri = "http://localhost:8080/api/v1/oauth/github/callback"
+# redirect_uri = "http://localhost:9090/api/v1/oauth/github/callback"
 ```
 
 ## Section Details
@@ -103,7 +103,7 @@ format = "json"                        # Log format: json, pretty
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `host` | string | `0.0.0.0` | Bind address |
-| `port` | u16 | `8080` | HTTP port |
+| `port` | u16 | `9090` | HTTP port |
 | `workers` | u16 | CPU count | Worker threads |
 | `request_timeout_secs` | u32 | `300` | Global request timeout |
 | `cors_origins` | string[] | `["*"]` | CORS allowed origins |
@@ -155,7 +155,7 @@ See [Kubernetes Deployment](../deployment/kubernetes.md) for full setup instruct
 | `root_volume_type` | string | `gp3` | EBS volume type |
 | `terminate_on_delete` | bool | `true` | Terminate instance on sandbox deletion |
 | `stop_on_pause` | bool | `true` | Stop instance on sandbox pause |
-| `startup_timeout_secs` | u32 | `300` | Max time to wait for instance startup |
+| `instance_ready_timeout_secs` | u64 | `180` | Max time to wait for instance startup |
 
 See [AWS EC2 Deployment](../deployment/ec2.md) for full setup instructions.
 
@@ -163,7 +163,7 @@ See [AWS EC2 Deployment](../deployment/ec2.md) for full setup instructions.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `binary_path` | string | `packer` | Path to the Packer binary |
+| `binary` | string | `packer` | Path to the Packer binary |
 | `auto_install` | bool | `true` | Auto-install Packer if not found |
 | `work_dir` | string | `/tmp/ciab-packer` | Working directory for builds |
 | `default_region` | string | `us-east-1` | Default AWS region for AMI builds |
@@ -229,7 +229,7 @@ See [Packer Image Builder](../deployment/packer.md) for full documentation.
 
 CIAB supports zero-config startup. When no explicit config file is provided, configuration is resolved through a 5-step chain where each step overrides values from the previous:
 
-1. **Built-in defaults** -- Sensible defaults for all fields (local runtime, port 8080, etc.)
+1. **Built-in defaults** -- Sensible defaults for all fields (local runtime, port 9090, etc.)
 2. **`./config.toml`** -- Config file in the current working directory
 3. **`~/.config/ciab/config.toml`** -- User-level config file
 4. **Environment variables** -- `CIAB_PORT`, `CIAB_RUNTIME_BACKEND`, etc. (see [Environment Variables](environment-variables.md))

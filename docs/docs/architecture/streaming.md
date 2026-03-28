@@ -74,7 +74,7 @@ Streams events **filtered to one session**: text deltas, tool use, session state
 
 ```javascript
 const source = new EventSource(
-  `http://localhost:8080/api/v1/sessions/${sessionId}/stream`
+  `http://localhost:9090/api/v1/sessions/${sessionId}/stream`
 );
 
 source.onmessage = (event) => {
@@ -93,7 +93,7 @@ source.onmessage = (event) => {
 ### curl
 
 ```bash
-curl -N http://localhost:8080/api/v1/sandboxes/<id>/stream
+curl -N http://localhost:9090/api/v1/sandboxes/<id>/stream
 ```
 
 ## Configuration

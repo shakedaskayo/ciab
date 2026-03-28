@@ -6,7 +6,7 @@ CIAB uses environment variables for secrets and CLI configuration.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `CIAB_SERVER_URL` | CIAB server URL | `http://localhost:8080` |
+| `CIAB_SERVER_URL` | CIAB server URL | `http://localhost:9090` |
 | `CIAB_API_KEY` | API key for authentication | — |
 
 ## Server Variables

@@ -57,7 +57,7 @@ root_volume_type = "gp3"              # EBS volume type: gp3, gp2, io1, io2
 # Lifecycle
 terminate_on_delete = true             # Terminate instance when sandbox is deleted
 stop_on_pause = true                   # Stop instance on sandbox pause (vs. keep running)
-startup_timeout_secs = 300             # Max time to wait for instance to reach "running"
+instance_ready_timeout_secs = 180      # Max time to wait for instance to reach "running"
 
 # Tags applied to all instances
 [runtime.ec2.tags]

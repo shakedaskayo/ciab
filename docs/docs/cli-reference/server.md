@@ -13,7 +13,7 @@ ciab server start [OPTIONS]
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--config` | `config.toml` | Configuration file path |
-| `--port` | 8080 | Override server port |
+| `--port` | 9090 | Override server port |
 | `--host` | `0.0.0.0` | Override bind address |
 | `--workers` | — | Number of worker threads |
 

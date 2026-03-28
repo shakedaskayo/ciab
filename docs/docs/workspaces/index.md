@@ -52,12 +52,12 @@ Or via API:
 
 ```bash
 # Import TOML
-curl -X POST http://localhost:8080/api/v1/workspaces/import \
+curl -X POST http://localhost:9090/api/v1/workspaces/import \
   -H "Content-Type: text/plain" \
   --data-binary @workspace.toml
 
 # Launch a sandbox from the workspace
-curl -X POST http://localhost:8080/api/v1/workspaces/{id}/launch
+curl -X POST http://localhost:9090/api/v1/workspaces/{id}/launch
 ```
 
 ## Workspace Components

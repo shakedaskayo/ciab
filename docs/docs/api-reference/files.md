@@ -48,7 +48,7 @@ Returns the raw file content as `application/octet-stream`.
 **Example:**
 
 ```bash
-curl -o main.rs http://localhost:8080/api/v1/sandboxes/<id>/files/workspace/src/main.rs
+curl -o main.rs http://localhost:9090/api/v1/sandboxes/<id>/files/workspace/src/main.rs
 ```
 
 ---
@@ -66,7 +66,7 @@ Uploads a file. The request body is the raw file content.
 ```bash
 curl -X PUT \
   --data-binary @./config.json \
-  http://localhost:8080/api/v1/sandboxes/<id>/files/workspace/config.json
+  http://localhost:9090/api/v1/sandboxes/<id>/files/workspace/config.json
 ```
 
 **Response:** `200 OK`

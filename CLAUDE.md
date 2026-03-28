@@ -19,7 +19,7 @@ cd docs && pip install -r requirements.txt && mkdocs serve  # Docs site
 - `ciab-sandbox` — Runtime backends: LocalProcessRuntime + OpenSandboxRuntime
 - `ciab-agent-{claude,codex,gemini,cursor}` — Agent provider implementations
 - `ciab-credentials` — Encrypted credential store, OAuth2
-- `ciab-provisioning` — 9-step sandbox provisioning pipeline
+- `ciab-provisioning` — 11-step sandbox provisioning pipeline
 - `ciab-api` — axum REST API server
 - `ciab-cli` — CLI binary (`ciab`)
 - `desktop/` — Tauri v2 + React desktop app

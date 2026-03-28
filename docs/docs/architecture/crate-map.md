@@ -1,6 +1,6 @@
 # Crate Map
 
-CIAB consists of 16 Rust crates organized in a workspace, plus a library facade crate.
+CIAB consists of 18 Rust crates organized in a workspace.
 
 ## Crate Overview
 
@@ -10,16 +10,18 @@ CIAB consists of 16 Rust crates organized in a workspace, plus a library facade 
 | `ciab-core` | Foundation types, traits, errors | `SandboxInfo`, `Session`, `Message`, `StreamEvent`, `CiabError` |
 | `ciab-db` | SQLite persistence via sqlx | `Database`, migrations |
 | `ciab-streaming` | SSE broker and event buffering | `StreamBroker`, `EventBuffer` |
-| `ciab-sandbox` | OpenSandbox container client | `SandboxRuntime`, lifecycle + execd APIs |
+| `ciab-sandbox` | Runtime backends: local process, Docker, OpenSandbox | `SandboxRuntime`, `LocalProcessRuntime`, lifecycle APIs |
 | `ciab-sandbox-k8s` | Kubernetes runtime backend | `KubernetesRuntime`, Pod builder, PVC, RBAC |
 | `ciab-sandbox-ec2` | AWS EC2 runtime backend | `Ec2Runtime`, instance lifecycle, SSH execution |
-| `ciab-agent-claude` | Claude Code agent provider | `ClaudeProvider` |
+| `ciab-agent-claude` | Claude Code agent provider | `ClaudeCodeProvider` |
 | `ciab-agent-codex` | Codex agent provider | `CodexProvider` |
 | `ciab-agent-gemini` | Gemini CLI agent provider | `GeminiProvider` |
 | `ciab-agent-cursor` | Cursor agent provider | `CursorProvider` |
 | `ciab-credentials` | Encrypted credential store | `CredentialStore`, AES-GCM encryption |
-| `ciab-provisioning` | 9-step sandbox provisioning | `ProvisioningPipeline`, `ProvisioningStep` |
+| `ciab-provisioning` | 11-step sandbox provisioning | `ProvisioningPipeline`, `ProvisioningStep` |
 | `ciab-packer` | HashiCorp Packer image builder | `PackerBuilder`, template resolution, build tracking |
+| `ciab-gateway` | Web gateway + tunneling + LAN/mDNS | Bore, Cloudflare, ngrok, frp tunnel adapters |
+| `ciab-channels` | External messaging adapters | Slack, WhatsApp, webhook integrations |
 | `ciab-api` | Axum REST API server | Routes, handlers, middleware |
 | `ciab-cli` | CLI binary (`ciab`) | Command definitions, HTTP client |
 
@@ -55,6 +57,8 @@ graph BT
     api --> gemini
     api --> cursor
     api --> packer
+    gateway[ciab-gateway] --> core
+    channels[ciab-channels] --> core
     facade[ciab] --> core
     facade --> db
     facade --> sandbox

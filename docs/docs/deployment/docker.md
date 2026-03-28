@@ -9,7 +9,7 @@ services:
   ciab:
     build: .
     ports:
-      - "8080:8080"
+      - "9090:9090"
     environment:
       - CIAB_ENCRYPTION_KEY=${CIAB_ENCRYPTION_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
@@ -55,5 +55,5 @@ export CIAB_ENCRYPTION_KEY=$(openssl rand -base64 32)
 docker compose up -d
 
 # Verify
-curl http://localhost:8080/health
+curl http://localhost:9090/health
 ```

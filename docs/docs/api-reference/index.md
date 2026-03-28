@@ -5,7 +5,7 @@ The CIAB REST API provides full programmatic control over sandboxes, sessions, f
 ## Base URL
 
 ```
-http://localhost:8080
+http://localhost:9090
 ```
 
 The port is configurable via `server.port` in `config.toml`.

@@ -23,7 +23,7 @@ CIAB can be deployed as a standalone binary or via Docker.
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────────┐
 │  CIAB Server │────▶│  OpenSandbox │────▶│  Agent Containers │
-│  (port 8080) │     │  (port 8000) │     │  (dynamic ports)  │
+│  (port 9090) │     │  (port 8000) │     │  (dynamic ports)  │
 └──────────────┘     └──────────────┘     └──────────────────┘
 ```
 

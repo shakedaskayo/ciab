@@ -85,7 +85,7 @@ data: {"id":"evt_001","sandbox_id":"550e8400-...","session_id":"6ba7b810-...","e
 === "curl"
 
     ```bash
-    curl -N http://localhost:8080/api/v1/sandboxes/<id>/stream
+    curl -N http://localhost:9090/api/v1/sandboxes/<id>/stream
     ```
 
 === "Python"
