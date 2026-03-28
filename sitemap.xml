@@ -2,230 +2,230 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://shakedaskayo.github.io/ciab/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/agent-providers/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/agent-providers/claude-code/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/agent-providers/codex/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/agent-providers/cursor/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/agent-providers/custom-provider/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/agent-providers/gemini/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/credentials/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/exec/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/files/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/images/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/oauth/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/sandboxes/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/sessions/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/streaming/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/api-reference/workspaces/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/architecture/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/architecture/crate-map/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/architecture/provisioning-pipeline/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/architecture/rust-library/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/architecture/sandbox-lifecycle/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/architecture/streaming/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/agent/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/config/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/credential/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/files/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/image/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/oauth/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/sandbox/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/server/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/session/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/cli-reference/workspace/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/configuration/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/configuration/environment-variables/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/contributing/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/deployment/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/deployment/docker/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/deployment/ec2/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/deployment/kubernetes/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/deployment/mobile-access/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/deployment/opensandbox/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/deployment/packer/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/deployment/production/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/getting-started/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/getting-started/installation/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/getting-started/quickstart/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/workspaces/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/workspaces/agent-config/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/workspaces/binaries/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/workspaces/credentials/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/workspaces/filesystem/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/workspaces/pre-commands/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/workspaces/repositories/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/workspaces/skills/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
     <url>
          <loc>https://shakedaskayo.github.io/ciab/workspaces/subagents/</loc>
-         <lastmod>2026-03-27</lastmod>
+         <lastmod>2026-03-28</lastmod>
     </url>
 </urlset>
