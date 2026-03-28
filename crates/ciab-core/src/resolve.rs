@@ -155,7 +155,7 @@ mod tests {
     fn test_parse_file_path() {
         let source = parse_source_string("/path/to/file.toml");
         assert!(
-            matches!(source, ResourceSource::FilePath(p) if p == PathBuf::from("/path/to/file.toml"))
+            matches!(source, ResourceSource::FilePath(p) if p == std::path::Path::new("/path/to/file.toml"))
         );
     }
 
